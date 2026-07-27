@@ -1,0 +1,71 @@
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 1rem;
+  color: var(--teal);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+  line-height: 1;
+}
+
+.input-field {
+  width: 100%;
+  padding: 13px 42px 13px 42px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-input);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: var(--font-main);
+  transition: var(--transition-fast);
+  caret-color: var(--teal);
+}
+
+.input-field::placeholder {
+  color: var(--teal);
+  opacity: 0.55;
+  font-size: 0.88rem;
+}
+
+.input-field:focus {
+  border-color: var(--border-input-focus);
+  box-shadow: var(--shadow-input-focus);
+  background: rgba(26, 26, 26, 0.95);
+}
+
+.input-wrapper--error .input-field {
+  border-color: #FF4EA1;
+}
+
+.input-right-slot {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.input-right-slot:hover {
+  color: var(--teal);
+}
+
+.input-error {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  color: #FF4EA1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}

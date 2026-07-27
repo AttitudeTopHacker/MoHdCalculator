@@ -1,0 +1,128 @@
+import { Link } from 'react-router-dom';
+import WaveBackground from '../components/WaveBackground';
+import './Home.css';
+
+const FEATURES = [
+  {
+    icon: '⬡',
+    title: 'Area Calculations',
+    desc: 'Precise measurements for any shape — circle, rectangle, triangle, polygon and more.',
+  },
+  {
+    icon: '🔐',
+    title: 'Secure Auth',
+    desc: 'JWT-based stateless auth with Google OAuth2 support. Your data stays yours.',
+  },
+  {
+    icon: '☁',
+    title: 'Cloud Synced',
+    desc: 'All calculations saved to Supabase PostgreSQL. Access from anywhere.',
+  },
+  {
+    icon: '⚡',
+    title: 'Blazing Fast',
+    desc: 'Spring Boot 4.x backend + Vite React frontend. Zero lag, premium feel.',
+  },
+];
+
+export default function Home() {
+  return (
+    <div className="home">
+      <WaveBackground />
+
+      {/* ── Nav ─────────────────────────────────────────────── */}
+      <header className="home-nav">
+        <div className="nav-logo">
+          <span className="nav-logo-icon">◈</span>
+          <span className="nav-logo-text">AreaCalculator</span>
+        </div>
+        <nav className="nav-links">
+          <Link to="/login"  className="nav-link">Login</Link>
+          <Link to="/signup" className="nav-btn">Get Started</Link>
+        </nav>
+      </header>
+
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="hero">
+        <div className="hero-badge">✦ Now in Phase 1</div>
+
+        <h1 className="hero-heading">
+          Calculate Areas
+          <br />
+          <span className="hero-accent">with Precision.</span>
+        </h1>
+
+        <p className="hero-desc">
+          A premium, full-stack area calculator with secure authentication,
+          Google sign-in, and cloud storage — built for engineers and builders.
+        </p>
+
+        <div className="hero-cta">
+          <Link to="/signup" className="cta-primary" id="hero-signup-btn">
+            Start for Free
+          </Link>
+          <Link to="/login" className="cta-secondary" id="hero-login-btn">
+            Sign In →
+          </Link>
+        </div>
+
+        {/* Floating stat chips */}
+        <div className="hero-stats">
+          <div className="stat-chip">
+            <span className="stat-num">5</span>
+            <span className="stat-label">API Endpoints</span>
+          </div>
+          <div className="stat-chip">
+            <span className="stat-num">JWT</span>
+            <span className="stat-label">Stateless Auth</span>
+          </div>
+          <div className="stat-chip">
+            <span className="stat-num">OAuth2</span>
+            <span className="stat-label">Google Login</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ─────────────────────────────────────────── */}
+      <section className="features">
+        <p className="section-eyebrow">What's inside</p>
+        <h2 className="section-heading">Built Different.</h2>
+
+        <div className="features-grid">
+          {FEATURES.map((f) => (
+            <div className="feature-card" key={f.title}>
+              <div className="feature-icon">{f.icon}</div>
+              <h3 className="feature-title">{f.title}</h3>
+              <p className="feature-desc">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA Banner ───────────────────────────────────────── */}
+      <section className="cta-banner">
+        <div className="cta-banner-inner">
+          <h2 className="cta-banner-heading">Ready to Calculate?</h2>
+          <p className="cta-banner-sub">
+            Sign up in seconds. No credit card required.
+          </p>
+          <Link to="/signup" className="cta-primary" id="bottom-signup-btn">
+            Create Free Account
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────── */}
+      <footer className="home-footer">
+        <span className="footer-logo">◈ AreaCalculator</span>
+        <span className="footer-copy">
+          Built by <strong style={{ color: 'var(--teal)' }}>Salman Ansari</strong> · 2026
+        </span>
+        <div className="footer-links">
+          <Link to="/login"  className="footer-link">Login</Link>
+          <Link to="/signup" className="footer-link">Sign Up</Link>
+        </div>
+      </footer>
+    </div>
+  );
+}
