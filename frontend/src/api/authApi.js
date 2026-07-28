@@ -1,6 +1,15 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+const getDynamicBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) return envUrl;
+  
+  // Fallback to dynamic host matching port 8080 in dev
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8080/api/v1`;
+};
+
+const BASE_URL = getDynamicBaseUrl();
 
 const api = axios.create({
   baseURL: BASE_URL,

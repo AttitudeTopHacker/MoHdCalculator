@@ -21,6 +21,8 @@ public class UserResponse {
     private Provider provider;
     private boolean verified;
     private boolean profileSetup;
+    private boolean hasPassword; // true if user has a password set (even for Google users)
+    private String pictureUrl;   // Google profile picture URL (if available)
 
     public static UserResponse from(User user) {
         return UserResponse.builder()
@@ -30,6 +32,8 @@ public class UserResponse {
                 .provider(user.getProvider())
                 .verified(user.isVerified())
                 .profileSetup(user.isProfileSetup())
+                .hasPassword(user.getPasswordHash() != null)
+                .pictureUrl(user.getPictureUrl())
                 .build();
     }
 }

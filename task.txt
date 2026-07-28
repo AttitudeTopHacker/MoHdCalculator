@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <fragment
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <Button
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:id="@+id/btn_start_stop"
+        android:padding="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="START TRACKING"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="#4caf50"/>
+</RelativeLayout>
+
+
+package salman.ansari.enterprises;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.location.Location;
+import android.os.Bundle;
+import android.os.Looper;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.internal.view.SupportMenu;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.maps.android.SphericalUtil;
+import java.util.ArrayList;
+import java.util.List;
+
+/* JADX INFO: loaded from: classes3.dex */
+public class MapAutoAreaCapture extends AppCompatActivity implements OnMapReadyCallback {
+    private static final double CLOSING_DISTANCE_THRESHOLD_METERS = 5.0d;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
+    private static final double SQ_METER_TO_SQ_FEET = 10.7639104d;
+    private static final float ZOOM_LEVEL_FOR_10M_AREA = 19.0f;
+    private Polygon areaPolygon;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+    private GoogleMap mMap;
+    private Button startStopButton;
+    private Polyline trackingPolyline;
+    private List<LatLng> trackingPoints = new ArrayList();
+    private boolean isTracking = false;
+
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.map_area_auto_captuer);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+        setStatusBarByTheme();
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
+        this.fusedLocationClient = LocationServices.getFusedLocationProviderClient((Activity) this);
+        this.startStopButton = (Button) findViewById(R.id.btn_start_stop);
+        this.startStopButton.setOnClickListener(new View.OnClickListener() { // from class: salman.ansari.enterprises.MapAutoAreaCapture$$ExternalSyntheticLambda0
+            @Override // android.view.View.OnClickListener
+            public final void onClick(View view) {
+                this.f$0.m1886lambda$onCreate$0$salmanansarienterprisesMapAutoAreaCapture(view);
+            }
+        });
+        if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION") != 0) {
+            ActivityCompat.requestPermissions(this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 100);
+        }
+    }
+
+    /* JADX INFO: renamed from: lambda$onCreate$0$salman-ansari-enterprises-MapAutoAreaCapture, reason: not valid java name */
+    /* synthetic */ void m1886lambda$onCreate$0$salmanansarienterprisesMapAutoAreaCapture(View v) {
+        toggleTracking();
+    }
+
+    @Override // com.google.android.gms.maps.OnMapReadyCallback
+    public void onMapReady(GoogleMap googleMap) {
+        this.mMap = googleMap;
+        this.mMap.getUiSettings().setZoomControlsEnabled(true);
+        this.mMap.setMapType(2);
+        if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION") == 0) {
+            try {
+                this.mMap.setMyLocationEnabled(true);
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            }
+        }
+        this.mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(20.5937d, 78.9629d), 4.0f));
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int topPaddingPx = (int) (metrics.density * 60.0f);
+        this.mMap.setPadding(0, topPaddingPx, 0, 0);
+    }
+
+    private void toggleTracking() {
+        if (!this.isTracking) {
+            startTracking();
+        } else {
+            stopTracking();
+        }
+    }
+
+    private void startTracking() {
+        if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION") != 0) {
+            Toast.makeText(this, "Location permission is required to start tracking.", 0).show();
+        } else {
+            this.fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() { // from class: salman.ansari.enterprises.MapAutoAreaCapture.1
+                @Override // com.google.android.gms.tasks.OnSuccessListener
+                public void onSuccess(Location location) {
+                    if (location != null) {
+                        LatLng startLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        MapAutoAreaCapture.this.mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startLatLng, MapAutoAreaCapture.ZOOM_LEVEL_FOR_10M_AREA));
+                        MapAutoAreaCapture.this.initiateLocationUpdates();
+                        return;
+                    }
+                    Toast.makeText(MapAutoAreaCapture.this, "Live location not found. Please wait and try again.", 1).show();
+                }
+            });
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void initiateLocationUpdates() {
+        this.trackingPoints.clear();
+        this.mMap.clear();
+        this.isTracking = true;
+        this.startStopButton.setText("STOP TRACKING");
+        this.startStopButton.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_red_dark));
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(5000L);
+        locationRequest.setFastestInterval(2000L);
+        locationRequest.setPriority(100);
+        this.locationCallback = new LocationCallback() { // from class: salman.ansari.enterprises.MapAutoAreaCapture.2
+            @Override // com.google.android.gms.location.LocationCallback
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (location != null) {
+                        LatLng newPoint = new LatLng(location.getLatitude(), location.getLongitude());
+                        if (MapAutoAreaCapture.this.trackingPoints.isEmpty()) {
+                            MapAutoAreaCapture.this.trackingPoints.add(newPoint);
+                            Toast.makeText(MapAutoAreaCapture.this, "Tracking started. Pin Point A set!", 0).show();
+                        } else {
+                            LatLng startPoint = (LatLng) MapAutoAreaCapture.this.trackingPoints.get(0);
+                            double distanceToStart = SphericalUtil.computeDistanceBetween(newPoint, startPoint);
+                            if (distanceToStart >= MapAutoAreaCapture.CLOSING_DISTANCE_THRESHOLD_METERS || MapAutoAreaCapture.this.trackingPoints.size() < 3) {
+                                MapAutoAreaCapture.this.trackingPoints.add(newPoint);
+                            } else {
+                                MapAutoAreaCapture.this.trackingPoints.add(startPoint);
+                                MapAutoAreaCapture.this.stopTracking();
+                                return;
+                            }
+                        }
+                        MapAutoAreaCapture.this.updateMapUI(newPoint);
+                    }
+                }
+            }
+        };
+        if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION") == 0) {
+            this.fusedLocationClient.requestLocationUpdates(locationRequest, this.locationCallback, Looper.getMainLooper());
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void stopTracking() {
+        if (this.isTracking) {
+            this.isTracking = false;
+            this.startStopButton.setText("START TRACKING");
+            this.startStopButton.setBackgroundTintList(ContextCompat.getColorStateList(this, android.R.color.holo_green_dark));
+            this.fusedLocationClient.removeLocationUpdates(this.locationCallback);
+            if (this.trackingPoints.size() < 3) {
+                Toast.makeText(this, "Minimum 3 points (lines) are required to form an area.", 1).show();
+            } else {
+                calculateAndDisplayArea(this.trackingPoints);
+            }
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void updateMapUI(LatLng newPoint) {
+        this.mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPoint, ZOOM_LEVEL_FOR_10M_AREA));
+        if (this.trackingPolyline != null) {
+            this.trackingPolyline.remove();
+        }
+        PolylineOptions polylineOptions = new PolylineOptions().addAll(this.trackingPoints).width(5.0f).color(SupportMenu.CATEGORY_MASK);
+        this.trackingPolyline = this.mMap.addPolyline(polylineOptions);
+    }
+
+    private void calculateAndDisplayArea(List<LatLng> points) {
+        Intent intent = new Intent(this, (Class<?>) MapAutoAreaCaptureToCalculate.class);
+        double areaSqMeters = SphericalUtil.computeArea(points);
+        PolygonOptions polygonOptions = new PolygonOptions().addAll(points).strokeWidth(3.0f).strokeColor(-16776961).fillColor(855703296);
+        this.areaPolygon = this.mMap.addPolygon(polygonOptions);
+        intent.putExtra("area_in_sq_metres", areaSqMeters);
+        startActivity(intent);
+    }
+
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if (grantResults.length > 0 && grantResults[0] == 0) {
+                Toast.makeText(this, "Location permission granted!", 0).show();
+                if (this.mMap != null) {
+                    try {
+                        this.mMap.setMyLocationEnabled(true);
+                        return;
+                    } catch (SecurityException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                }
+                return;
+            }
+            Toast.makeText(this, "Location permission denied. Cannot track area.", 1).show();
+        }
+    }
+
+    private void setStatusBarByTheme() {
+        Window window = getWindow();
+        View decor = window.getDecorView();
+        int nightModeFlags = getResources().getConfiguration().uiMode & 48;
+        if (nightModeFlags == 32) {
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.cardview_dark_background));
+            decor.setSystemUiVisibility(0);
+        } else {
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.dark));
+            decor.setSystemUiVisibility(8192);
+        }
+    }
+}

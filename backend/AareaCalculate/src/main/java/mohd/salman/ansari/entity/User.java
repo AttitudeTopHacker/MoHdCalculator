@@ -32,6 +32,10 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash;
 
+    /** Google profile picture URL — null for local accounts */
+    @Column(name = "picture_url", length = 1024)
+    private String pictureUrl;
+
     /** LOCAL = email/password, GOOGLE = OAuth2 */
     @Enumerated(EnumType.STRING)
     @Column(name = "provider", nullable = false)

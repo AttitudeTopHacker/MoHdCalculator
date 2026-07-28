@@ -137,9 +137,9 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password."));
 
-        // Google-only accounts don't have a password hash
-        if (user.getProvider() == Provider.GOOGLE || user.getPasswordHash() == null) {
-            throw new InvalidCredentialsException("This account uses Google sign-in. Please use 'Continue with Google'.");
+        // Block login if no password is set (Google-only accounts that never set a password)
+        if (user.getPasswordHash() == null) {
+            throw new InvalidCredentialsException("This account has no password set. Please use 'Continue with Google' or set a password via Edit Profile.");
         }
 
         if (!user.isVerified()) {

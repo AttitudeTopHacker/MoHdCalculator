@@ -10,6 +10,14 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import OAuth2Callback from './pages/OAuth2Callback';
+import MapAuto from './pages/tools/MapAuto';
+import MapManual from './pages/tools/MapManual';
+import MapDraw from './pages/tools/MapDraw';
+import TriangleArea from './pages/tools/TriangleArea';
+import RectangleArea from './pages/tools/RectangleArea';
+import AreaConvert from './pages/tools/AreaConvert';
+import ConvertSqMt from './pages/tools/ConvertSqMt';
+import LengthConvert from './pages/tools/LengthConvert';
 
 /**
  * ProtectedRoute:
@@ -93,6 +101,14 @@ export default function App() {
           {/* Protected routes */}
           <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
           <Route path="/dashboard"     element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/map-auto" element={<ProtectedRoute><MapAuto /></ProtectedRoute>} />
+          <Route path="/dashboard/map-manual" element={<ProtectedRoute><MapManual /></ProtectedRoute>} />
+          <Route path="/dashboard/map-draw" element={<ProtectedRoute><MapDraw /></ProtectedRoute>} />
+          <Route path="/dashboard/triangle-area" element={<ProtectedRoute><TriangleArea /></ProtectedRoute>} />
+          <Route path="/dashboard/rectangle-area" element={<ProtectedRoute><RectangleArea /></ProtectedRoute>} />
+          <Route path="/dashboard/area-convert" element={<ProtectedRoute><AreaConvert /></ProtectedRoute>} />
+          <Route path="/dashboard/convert-sq-mt" element={<ProtectedRoute><ConvertSqMt /></ProtectedRoute>} />
+          <Route path="/dashboard/length-convert" element={<ProtectedRoute><LengthConvert /></ProtectedRoute>} />
 
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

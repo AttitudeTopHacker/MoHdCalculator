@@ -7,6 +7,89 @@ import PrimaryButton from '../components/PrimaryButton';
 import Toast from '../components/Toast';
 import './Dashboard.css';
 
+const TOOLS = [
+  {
+    id: 'map-auto',
+    title: 'Map Auto',
+    desc: 'Capture boundaries automatically using real-time GPS path tracking.',
+    icon: '🛰️',
+    category: 'map',
+    path: '/dashboard/map-auto',
+    badge: 'Simulator',
+    color: 'var(--teal)'
+  },
+  {
+    id: 'map-manual',
+    title: 'Map Manual',
+    desc: 'Input manual GPS latitude/longitude coordinates to plot custom boundaries.',
+    icon: '✍️',
+    category: 'map',
+    path: '/dashboard/map-manual',
+    badge: 'Interactive',
+    color: 'var(--teal)'
+  },
+  {
+    id: 'map-draw',
+    title: 'Map Draw Calc',
+    desc: 'Sketch boundaries manually on an interactive grid canvas to calculate area.',
+    icon: '📐',
+    category: 'map',
+    path: '/dashboard/map-draw',
+    badge: 'Interactive',
+    color: 'var(--teal)'
+  },
+  {
+    id: 'triangle',
+    title: 'Area Triangle',
+    desc: 'Calculate triangle area using the base and vertical height formula.',
+    icon: '🔺',
+    category: 'shapes',
+    path: '/dashboard/triangle-area',
+    badge: 'Functional',
+    color: 'var(--magenta)'
+  },
+  {
+    id: 'rectangle',
+    title: 'Area Rectangle',
+    desc: 'Calculate rectangle or square area using length and width dimensions.',
+    icon: '⏹️',
+    category: 'shapes',
+    path: '/dashboard/rectangle-area',
+    badge: 'Functional',
+    color: 'var(--magenta)'
+  },
+  {
+    id: 'area-convert',
+    title: 'Area Convert',
+    desc: 'Convert area metrics between square meters, square feet, yards, and acres.',
+    icon: '🔄',
+    category: 'converters',
+    path: '/dashboard/area-convert',
+    badge: 'Functional',
+    color: 'var(--orange)'
+  },
+  {
+    id: 'sq-mt-convert',
+    title: 'SQ_MT Convert',
+    desc: 'Convert square meters to traditional local subcontinental land measurement units.',
+    icon: '🏢',
+    category: 'converters',
+    path: '/dashboard/convert-sq-mt',
+    badge: 'Functional',
+    color: 'var(--orange)'
+  },
+  {
+    id: 'length-convert',
+    title: 'Length Convert',
+    desc: 'Convert distance and length metrics between meters, feet, yards, and miles.',
+    icon: '📏',
+    category: 'converters',
+    path: '/dashboard/length-convert',
+    badge: 'Functional',
+    color: 'var(--orange)'
+  }
+];
+
 export default function Dashboard() {
   const { user, logout, saveSession, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -16,13 +99,22 @@ export default function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Tab Filter State for Tools
+  const [filter, setFilter] = useState('all');
+
+  // Filtered tools computed property
+  const filteredTools = filter === 'all' 
+    ? TOOLS 
+    : TOOLS.filter(t => t.category === filter);
+
   // Edit Profile Form State
   const [form, setForm] = useState({
     fullName: '',
-    currentPassword: '',
     newPassword: '',
     confirmNewPassword: '',
   });
+  // Notification state for Google users without password
+  const [showPasswordNotice, setShowPasswordNotice] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -40,13 +132,19 @@ export default function Dashboard() {
     if (user && modalOpen) {
       setForm({
         fullName: user.fullName || '',
-        currentPassword: '',
         newPassword: '',
         confirmNewPassword: '',
       });
       setErrors({});
     }
   }, [user, modalOpen]);
+
+  // Show password notification to Google users who haven't set a password
+  useEffect(() => {
+    if (user && user.provider === 'GOOGLE' && !user.hasPassword) {
+      setShowPasswordNotice(true);
+    }
+  }, [user]);
 
   // Click outside to close dropdown
   useEffect(() => {
@@ -73,9 +171,6 @@ export default function Dashboard() {
     const e = {};
     if (!form.fullName.trim()) e.fullName = 'Full name is required';
     if (form.newPassword) {
-      if (user.provider === 'LOCAL' && !form.currentPassword) {
-        e.currentPassword = 'Current password is required to change password';
-      }
       if (form.newPassword.length < 8) {
         e.newPassword = 'New password must be at least 8 characters';
       }
@@ -98,7 +193,6 @@ export default function Dashboard() {
     try {
       const res = await authApi.updateProfile({
         fullName: form.fullName.trim(),
-        currentPassword: form.currentPassword || null,
         newPassword: form.newPassword || null,
         confirmNewPassword: form.confirmNewPassword || null,
       });
@@ -106,6 +200,8 @@ export default function Dashboard() {
       const updatedUser = res.data.data;
       const token = localStorage.getItem('ac_token');
       saveSession(token, updatedUser);
+      // Hide password notice after setting password
+      if (form.newPassword) setShowPasswordNotice(false);
       
       setToast({ type: 'success', message: 'Profile updated successfully!' });
       setModalOpen(false);
@@ -123,6 +219,9 @@ export default function Dashboard() {
   const initials = user.fullName
     ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
     : user.email.substring(0, 2).toUpperCase();
+
+  // Profile picture URL (Google pic or null)
+  const avatarPic = user.pictureUrl || null;
 
   return (
     <div className="dashboard">
@@ -144,7 +243,10 @@ export default function Dashboard() {
         <div className="dashboard-actions">
           <div className="profile-avatar-container" ref={dropdownRef}>
             <div className="profile-avatar" onClick={() => setDropdownOpen(!dropdownOpen)}>
-              {initials}
+              {avatarPic
+                ? <img src={avatarPic} alt="profile" className="profile-avatar-img" />
+                : initials
+              }
             </div>
 
             {dropdownOpen && (
@@ -173,31 +275,77 @@ export default function Dashboard() {
 
       {/* ── Main Dashboard ────────────────────────────────────── */}
       <main className="dashboard-main">
-        <div className="welcome-badge">Phase 1 Complete ✓</div>
+        <div className="welcome-badge">Phase 1 & 2 Complete ✓</div>
         <h1 className="dashboard-heading">
           Welcome, <span style={{ color: 'var(--teal)' }}>{user.fullName || user.email}</span>!
         </h1>
-        <p className="dashboard-subtitle">
-          Authentication is live. Calculator features coming soon.
-        </p>
+        
+        {/* Account Info Ribbon */}
+        <div className="user-profile-bar">
+          <div className="profile-bar-item">
+            <span className="profile-bar-label">Email</span>
+            <span className="profile-bar-value">{user.email}</span>
+          </div>
+          <div className="profile-bar-item">
+            <span className="profile-bar-label">Method</span>
+            <span className="profile-bar-value">{user.provider}</span>
+          </div>
+          <div className="profile-bar-item">
+            <span className="profile-bar-label">Status</span>
+            <span className="profile-bar-value status-verified" style={{ color: user.verified ? 'var(--teal)' : 'var(--magenta)' }}>
+              {user.verified ? 'Verified ✓' : 'Unverified'}
+            </span>
+          </div>
+        </div>
 
-        <div className="dashboard-cards">
-          <div className="dash-card">
-            <div className="dash-card-icon">✉</div>
-            <div className="dash-card-label">Email</div>
-            <div className="dash-card-value">{user.email}</div>
-          </div>
-          <div className="dash-card">
-            <div className="dash-card-icon">🔐</div>
-            <div className="dash-card-label">Auth Method</div>
-            <div className="dash-card-value">{user.provider}</div>
-          </div>
-          <div className="dash-card">
-            <div className="dash-card-icon">✓</div>
-            <div className="dash-card-label">Status</div>
-            <div className="dash-card-value" style={{ color: 'var(--teal)' }}>
-              {user.verified ? 'Verified' : 'Unverified'}
+        {/* Google Password Notification Banner */}
+        {showPasswordNotice && (
+          <div className="google-password-notice">
+            <div className="notice-content">
+              <span className="notice-icon">🔐</span>
+              <div className="notice-text">
+                <strong>Password Setup Recommended</strong>
+                <span>Aapne Google se login kiya hai. Agar aap email + password se bhi login karna chahte hain to <button className="notice-link" onClick={() => { setModalOpen(true); setShowPasswordNotice(false); }}>Edit Profile</button> me jakar password set karein.</span>
+              </div>
+              <button className="notice-close" onClick={() => setShowPasswordNotice(false)}>✕</button>
             </div>
+          </div>
+        )}
+
+        {/* Dashboard Tools Suite */}
+        <div className="tools-section">
+          <div className="section-header">
+            <h2 className="section-title">Calculator & Converter Suite</h2>
+            <div className="filter-tabs">
+              <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
+              <button className={`filter-tab ${filter === 'map' ? 'active' : ''}`} onClick={() => setFilter('map')}>Map Tools</button>
+              <button className={`filter-tab ${filter === 'shapes' ? 'active' : ''}`} onClick={() => setFilter('shapes')}>Shapes</button>
+              <button className={`filter-tab ${filter === 'converters' ? 'active' : ''}`} onClick={() => setFilter('converters')}>Converters</button>
+            </div>
+          </div>
+
+          <div className="tools-grid">
+            {filteredTools.map((tool) => (
+              <div 
+                key={tool.id} 
+                className="tool-card" 
+                onClick={() => navigate(tool.path)}
+                style={{ '--tool-glow-color': tool.color }}
+              >
+                <div className="tool-card-glow" />
+                <div className="tool-card-header">
+                  <span className="tool-card-icon">{tool.icon}</span>
+                  <span className={`status-badge ${tool.badge === 'Functional' ? 'functional' : tool.badge === 'Simulator' ? 'simulated' : 'beta'}`}>
+                    {tool.badge}
+                  </span>
+                </div>
+                <h3 className="tool-card-title">{tool.title}</h3>
+                <p className="tool-card-desc">{tool.desc}</p>
+                <div className="tool-card-footer">
+                  <span className="tool-card-action">Launch Calculator →</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </main>
@@ -230,20 +378,9 @@ export default function Dashboard() {
               <div style={{ margin: '20px 0 10px', fontSize: '0.8rem', color: 'var(--teal)', fontWeight: '600' }}>
                 CHANGE PASSWORD (optional)
               </div>
-
-              {/* Current Password (if local) */}
-              {user.provider === 'LOCAL' && (
-                <div className="form-group">
-                  <InputField
-                    id="edit-current-password"
-                    name="currentPassword"
-                    type="password"
-                    placeholder="Current Password"
-                    value={form.currentPassword}
-                    onChange={handleFormChange}
-                    icon="🔒"
-                    error={errors.currentPassword}
-                  />
+              {user.provider === 'GOOGLE' && !user.hasPassword && (
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '10px', padding: '8px 12px', background: 'rgba(46,230,197,0.05)', borderRadius: '8px', border: '1px solid rgba(46,230,197,0.15)' }}>
+                  💡 Google account hai — password set karne ke baad email + password se bhi login ho sakenge.
                 </div>
               )}
 

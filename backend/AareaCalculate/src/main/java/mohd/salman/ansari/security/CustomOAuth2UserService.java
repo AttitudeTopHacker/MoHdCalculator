@@ -29,8 +29,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         OAuth2User oAuth2User = new DefaultOAuth2UserService().loadUser(userRequest);
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String email    = (String) attributes.get("email");
-        String fullName = (String) attributes.get("name");
+        String email      = (String) attributes.get("email");
+        String fullName   = (String) attributes.get("name");
+        String pictureUrl = (String) attributes.get("picture"); // Google profile pic
 
         // Upsert user — create if not exists, update name if needed
         User user = userRepository.findByEmail(email).orElse(null);
@@ -41,6 +42,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     .email(email)
                     .fullName(fullName)
                     .provider(Provider.GOOGLE)
+                    .pictureUrl(pictureUrl)
                     .isVerified(true)   // Google accounts are already verified
                     .isProfileSetup(false) // Needs name/password setup
                     .build();
@@ -49,7 +51,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             // Existing local user — link Google to their account
             user.setVerified(true);
             user.setProfileSetup(true); // Local users already have a profile
+            if (pictureUrl != null) user.setPictureUrl(pictureUrl);
             userRepository.save(user);
+        } else {
+            // Returning Google user — update picture if changed
+            if (pictureUrl != null && !pictureUrl.equals(user.getPictureUrl())) {
+                user.setPictureUrl(pictureUrl);
+                userRepository.save(user);
+            }
         }
 
         return oAuth2User;
