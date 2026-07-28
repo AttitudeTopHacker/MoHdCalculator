@@ -32,8 +32,9 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash;
 
-    /** Google profile picture URL — null for local accounts */
-    @Column(name = "picture_url", length = 1024)
+    /** Profile picture — Google URL for OAuth users, base64 data URL for uploaded pics */
+    @Lob
+    @Column(name = "picture_url", columnDefinition = "TEXT")
     private String pictureUrl;
 
     /** LOCAL = email/password, GOOGLE = OAuth2 */

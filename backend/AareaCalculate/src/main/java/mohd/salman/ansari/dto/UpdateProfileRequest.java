@@ -14,4 +14,5 @@ public class UpdateProfileRequest {
     private String currentPassword;
     private String newPassword;
     private String confirmNewPassword;
+    private String pictureUrl; // base64 data URL or null to keep existing
 }

@@ -98,6 +98,7 @@ export default function Dashboard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Tab Filter State for Tools
   const [filter, setFilter] = useState('all');
@@ -113,6 +114,7 @@ export default function Dashboard() {
     newPassword: '',
     confirmNewPassword: '',
   });
+  const [picPreview, setPicPreview] = useState(null); // base64 preview of selected pic
   // Notification state for Google users without password
   const [showPasswordNotice, setShowPasswordNotice] = useState(false);
   const [errors, setErrors] = useState({});
@@ -135,6 +137,7 @@ export default function Dashboard() {
         newPassword: '',
         confirmNewPassword: '',
       });
+      setPicPreview(null); // reset preview on each modal open
       setErrors({});
     }
   }, [user, modalOpen]);
@@ -167,6 +170,19 @@ export default function Dashboard() {
     setErrors((prev) => ({ ...prev, [e.target.name]: '' }));
   };
 
+  // Convert selected image file to base64 for preview & upload
+  const handlePicChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setToast({ type: 'error', message: 'Image size 2MB se kam honi chahiye.' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => setPicPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   const validate = () => {
     const e = {};
     if (!form.fullName.trim()) e.fullName = 'Full name is required';
@@ -195,6 +211,7 @@ export default function Dashboard() {
         fullName: form.fullName.trim(),
         newPassword: form.newPassword || null,
         confirmNewPassword: form.confirmNewPassword || null,
+        pictureUrl: picPreview || null, // send base64 if user picked a new pic
       });
       
       const updatedUser = res.data.data;
@@ -360,6 +377,46 @@ export default function Dashboard() {
             </div>
 
             <form onSubmit={handleSaveProfile} className="auth-form" noValidate>
+
+              {/* Profile Picture Upload */}
+              <div className="modal-avatar-section">
+                <div
+                  className="modal-avatar"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Click to change profile picture"
+                >
+                  {picPreview
+                    ? <img src={picPreview} alt="preview" className="modal-avatar-img" />
+                    : avatarPic
+                      ? <img src={avatarPic} alt="profile" className="modal-avatar-img" />
+                      : <span className="modal-avatar-initials">{initials}</span>
+                  }
+                  <div className="modal-avatar-overlay">
+                    <span>📷</span>
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handlePicChange}
+                  id="profile-pic-input"
+                />
+                <p className="modal-avatar-hint">
+                  {picPreview ? '✓ Nai photo selected' : 'Photo change karne ke liye click karein'}
+                </p>
+                {picPreview && (
+                  <button
+                    type="button"
+                    className="modal-avatar-remove"
+                    onClick={() => { setPicPreview(null); fileInputRef.current.value = ''; }}
+                  >
+                    ✕ Remove
+                  </button>
+                )}
+              </div>
+
               {/* Full Name */}
               <div className="form-group">
                 <InputField

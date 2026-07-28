@@ -237,6 +237,11 @@ public class AuthService {
             user.setFullName(request.getFullName().trim());
         }
 
+        // Update profile picture if provided
+        if (request.getPictureUrl() != null && !request.getPictureUrl().trim().isEmpty()) {
+            user.setPictureUrl(request.getPictureUrl().trim());
+        }
+
         if (request.getNewPassword() != null && !request.getNewPassword().trim().isEmpty()) {
             // Check current password if user has a password set (local login)
             if (user.getPasswordHash() != null) {

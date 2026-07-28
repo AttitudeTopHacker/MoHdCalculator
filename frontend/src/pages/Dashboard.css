@@ -563,3 +563,85 @@
   opacity: 1;
   color: var(--text-primary);
 }
+
+/* ── Modal Profile Picture Upload ────────────────────────────── */
+.modal-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.modal-avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--teal-dim);
+  border: 2.5px solid var(--teal);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-avatar:hover {
+  border-color: var(--teal);
+  box-shadow: 0 0 14px rgba(46, 230, 197, 0.4);
+}
+
+.modal-avatar:hover .modal-avatar-overlay {
+  opacity: 1;
+}
+
+.modal-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-avatar-initials {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--teal);
+  user-select: none;
+}
+
+.modal-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: 50%;
+}
+
+.modal-avatar-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.modal-avatar-remove {
+  background: none;
+  border: none;
+  color: var(--magenta);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.modal-avatar-remove:hover {
+  opacity: 1;
+}
