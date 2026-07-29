@@ -37,7 +37,19 @@ export default function LengthConvert() {
       // 1. Convert current selection
       const res = await calculateApi.lengthConvert(val, fromUnit, toUnit);
       if (res.data.success) {
-        setResult(res.data.data.result);
+        const resVal = res.data.data.result;
+        setResult(resVal);
+        
+        // Save calculation to history in background
+        try {
+          calculateApi.saveHistory(
+            'Length Conversion',
+            `${val} ${fromUnit}`,
+            `${resVal.toFixed(4)} ${toUnit}`
+          );
+        } catch (historyErr) {
+          console.error("Failed to save history record", historyErr);
+        }
       } else {
         setError(res.data.message || 'Conversion failed');
         setLoading(false);

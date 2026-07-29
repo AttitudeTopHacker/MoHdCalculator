@@ -40,7 +40,19 @@ export default function AreaConvert() {
       // 1. Primary conversion
       const res = await calculateApi.convert(val, from, to);
       if (res.data.success) {
-        setResult(res.data.data.result);
+        const resVal = res.data.data.result;
+        setResult(resVal);
+        
+        // Save calculation to history in background
+        try {
+          calculateApi.saveHistory(
+            'Area Conversion',
+            `${val} ${from}`,
+            `${resVal.toFixed(4)} ${to}`
+          );
+        } catch (historyErr) {
+          console.error("Failed to save history record", historyErr);
+        }
       } else {
         setError(res.data.message || 'Conversion failed');
         setLoading(false);

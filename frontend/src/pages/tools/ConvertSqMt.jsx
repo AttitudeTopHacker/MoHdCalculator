@@ -37,13 +37,25 @@ export default function ConvertSqMt() {
       ]);
 
       if (resBreakdown.data.success) {
-        setBreakdown(resBreakdown.data.data);
+        const breakdownData = resBreakdown.data.data;
+        setBreakdown(breakdownData);
         setEquivalents({
           gaj: resGaj.data.data.result.toFixed(2),
           sqft: resSqft.data.data.result.toFixed(2),
           acres: resAcres.data.data.result.toFixed(4),
           hectares: resHectares.data.data.result.toFixed(4)
         });
+
+        // Save calculation to history in background
+        try {
+          calculateApi.saveHistory(
+            'SQ_MT Convert',
+            `${val} Sq Mt`,
+            `Breakdown: ${breakdownData.bigha} Bigha, ${breakdownData.biswa} Biswa, ${breakdownData.biswansi} Biswansi`
+          );
+        } catch (historyErr) {
+          console.error("Failed to save history record", historyErr);
+        }
       } else {
         setError(resBreakdown.data.message || 'Breakdown calculation failed');
       }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
+import { calculateApi } from '../../api/calculateApi';
 import './Tools.css';
 
 export default function MapManual() {
@@ -200,6 +201,17 @@ export default function MapManual() {
     // Compute spherical area via Google Maps Utilities
     const calculatedArea = window.google.maps.geometry.spherical.computeArea(closedPath);
     setResult(calculatedArea);
+
+    // Save calculation to history in background
+    try {
+      calculateApi.saveHistory(
+        'Map Manual',
+        `${points.length} GPS Points mapped manually`,
+        `Spherical Area: ${calculatedArea.toFixed(2)} Sq Mt`
+      );
+    } catch (historyErr) {
+      console.error("Failed to save history record", historyErr);
+    }
   };
 
   const handleClear = () => {

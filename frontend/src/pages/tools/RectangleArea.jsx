@@ -78,6 +78,17 @@ export default function RectangleArea() {
           biswa: data.part3,
           biswansi: data.part4
         });
+
+        // Save calculation to history in background
+        try {
+          calculateApi.saveHistory(
+            'Area Rectangle',
+            `East: ${east} ${calculatorUnit}, West: ${west} ${calculatorUnit}, North: ${north} ${calculatorUnit}, South: ${south} ${calculatorUnit}`,
+            `Breakdown: ${data.part1} Acre, ${data.part2} Bigha, ${data.part3} Biswa, ${data.part4} Biswansi`
+          );
+        } catch (historyErr) {
+          console.error("Failed to save history record", historyErr);
+        }
       } else {
         setError(res.data.message || 'Breakdown calculation failed');
       }

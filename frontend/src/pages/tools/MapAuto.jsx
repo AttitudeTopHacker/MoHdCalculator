@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { calculateApi } from '../../api/calculateApi';
 import './Tools.css';
 
 export default function MapAuto() {
@@ -313,6 +314,17 @@ export default function MapAuto() {
 
     // Compute final area
     const finalArea = window.google.maps.geometry.spherical.computeArea(closedPath);
+
+    // Save calculation to history in background
+    try {
+      calculateApi.saveHistory(
+        'Map Auto',
+        `${capturedPoints.length} GPS Points tracked automatically`,
+        `Spherical Area: ${finalArea.toFixed(2)} Sq Mt`
+      );
+    } catch (historyErr) {
+      console.error("Failed to save history record", historyErr);
+    }
 
     // Snappy direct redirect to Area Convert (no delay overlay)
     navigate('/dashboard/area-convert', {

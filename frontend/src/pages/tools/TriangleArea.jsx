@@ -81,6 +81,17 @@ export default function TriangleArea() {
             biswa: breakdown.biswa,
             biswansi: breakdown.biswansi
           });
+          
+          // Save calculation to history in background
+          try {
+            calculateApi.saveHistory(
+              'Area Triangle',
+              `Side A: ${rawA} ${unit}, Side B: ${rawB} ${unit}, Side C: ${rawC} ${unit}`,
+              `Area: ${areaSqM.toFixed(2)} Sq Mt (${breakdown.bigha} Bigha, ${breakdown.biswa} Biswa, ${breakdown.biswansi} Biswansi)`
+            );
+          } catch (historyErr) {
+            console.error("Failed to save history record", historyErr);
+          }
         } else {
           setError(breakdownRes.data.message || 'Breakdown calculation failed');
         }

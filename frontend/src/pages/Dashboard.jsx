@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/authApi';
+import { calculateApi } from '../api/calculateApi';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
 import Toast from '../components/Toast';
@@ -109,6 +110,46 @@ export default function Dashboard() {
   const filteredTools = filter === 'all' 
     ? TOOLS 
     : TOOLS.filter(t => t.category === filter);
+
+  // Calculation History State
+  const [historyList, setHistoryList] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historyTotalPages, setHistoryTotalPages] = useState(1);
+
+  const fetchHistory = async (page = 0) => {
+    setHistoryLoading(true);
+    try {
+      const res = await calculateApi.getHistory(page, 10);
+      if (res.data.success) {
+        setHistoryList(res.data.data.content);
+        setHistoryPage(res.data.data.number);
+        setHistoryTotalPages(res.data.data.totalPages);
+      }
+    } catch (err) {
+      console.error("Failed to fetch calculation history", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (filter === 'history') {
+      fetchHistory(0);
+    }
+  }, [filter]);
+
+  const handleDeleteHistory = async (id) => {
+    try {
+      const res = await calculateApi.deleteHistoryItem(id);
+      if (res.data.success) {
+        setHistoryList(prev => prev.filter(item => item.id !== id));
+        setToast({ type: 'success', message: 'History record deleted successfully' });
+      }
+    } catch (err) {
+      setToast({ type: 'error', message: 'Failed to delete history record' });
+    }
+  };
 
   // Edit Profile Form State
   const [form, setForm] = useState({
@@ -376,32 +417,104 @@ export default function Dashboard() {
               <button className={`filter-tab ${filter === 'map' ? 'active' : ''}`} onClick={() => setFilter('map')}>Map Tools</button>
               <button className={`filter-tab ${filter === 'shapes' ? 'active' : ''}`} onClick={() => setFilter('shapes')}>Shapes</button>
               <button className={`filter-tab ${filter === 'converters' ? 'active' : ''}`} onClick={() => setFilter('converters')}>Converters</button>
+              <button className={`filter-tab ${filter === 'history' ? 'active' : ''}`} onClick={() => setFilter('history')}>History 🕒</button>
             </div>
           </div>
 
-          <div className="tools-grid">
-            {filteredTools.map((tool) => (
-              <div 
-                key={tool.id} 
-                className="tool-card" 
-                onClick={() => navigate(tool.path)}
-                style={{ '--tool-glow-color': tool.color }}
-              >
-                <div className="tool-card-glow" />
-                <div className="tool-card-header">
-                  <span className="tool-card-icon">{tool.icon}</span>
-                  <span className={`status-badge ${tool.badge === 'Functional' ? 'functional' : tool.badge === 'Simulator' ? 'simulated' : 'beta'}`}>
-                    {tool.badge}
-                  </span>
+          {filter === 'history' ? (
+            <div className="history-container">
+              {historyLoading ? (
+                <div className="loading-state" style={{ color: 'var(--teal)', padding: '40px', textAlign: 'center', fontSize: '1.1rem' }}>
+                  Loading history...
                 </div>
-                <h3 className="tool-card-title">{tool.title}</h3>
-                <p className="tool-card-desc">{tool.desc}</p>
-                <div className="tool-card-footer">
-                  <span className="tool-card-action">Launch Calculator →</span>
+              ) : historyList.length === 0 ? (
+                <div className="empty-state" style={{ color: 'var(--text-muted)', padding: '40px', textAlign: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  No calculations saved yet. Start calculating to see history here!
                 </div>
-              </div>
-            ))}
-          </div>
+              ) : (
+                <>
+                  <div className="history-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {historyList.map((item) => (
+                      <div key={item.id} className="history-card glass-card" style={{ padding: '16px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                          <span className="status-badge functional" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            {item.calculationType}
+                          </span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {new Date(item.createdAt).toLocaleString()}
+                          </span>
+                          <button 
+                            onClick={() => handleDeleteHistory(item.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', transition: 'transform 0.2s', padding: '4px' }}
+                            onMouseOver={(e) => e.target.style.transform = 'scale(1.2)'}
+                            onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                            title="Delete history record"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem' }}>
+                          <div style={{ color: 'var(--text-muted)' }}>
+                            <strong style={{ color: 'var(--teal)' }}>Inputs:</strong> {item.inputData}
+                          </div>
+                          <div style={{ color: '#fff' }}>
+                            <strong style={{ color: 'var(--magenta)' }}>Result:</strong> {item.resultData}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {historyTotalPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '24px' }}>
+                      <button 
+                        disabled={historyPage === 0} 
+                        onClick={() => fetchHistory(historyPage - 1)}
+                        className="tool-btn-secondary"
+                        style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                      >
+                        Previous
+                      </button>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        Page {historyPage + 1} of {historyTotalPages}
+                      </span>
+                      <button 
+                        disabled={historyPage >= historyTotalPages - 1} 
+                        onClick={() => fetchHistory(historyPage + 1)}
+                        className="tool-btn-secondary"
+                        style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="tools-grid">
+              {filteredTools.map((tool) => (
+                <div 
+                  key={tool.id} 
+                  className="tool-card" 
+                  onClick={() => navigate(tool.path)}
+                  style={{ '--tool-glow-color': tool.color }}
+                >
+                  <div className="tool-card-glow" />
+                  <div className="tool-card-header">
+                    <span className="tool-card-icon">{tool.icon}</span>
+                    <span className={`status-badge ${tool.badge === 'Functional' ? 'functional' : tool.badge === 'Simulator' ? 'simulated' : 'beta'}`}>
+                      {tool.badge}
+                    </span>
+                  </div>
+                  <h3 className="tool-card-title">{tool.title}</h3>
+                  <p className="tool-card-desc">{tool.desc}</p>
+                  <div className="tool-card-footer">
+                    <span className="tool-card-action">Launch Calculator →</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 

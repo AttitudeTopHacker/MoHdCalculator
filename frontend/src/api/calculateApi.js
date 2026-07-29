@@ -15,6 +15,15 @@ export const calculateApi = {
 
   lengthConvert: (value, fromUnit, toUnit) =>
     api.post('/calculate/length-convert', { value, fromUnit, toUnit }),
+
+  saveHistory: (calculationType, inputData, resultData) =>
+    api.post('/calculate/history', { calculationType, inputData, resultData }),
+
+  getHistory: (page = 0, size = 10) =>
+    api.get(`/calculate/history?page=${page}&size=${size}`),
+
+  deleteHistoryItem: (id) =>
+    api.delete(`/calculate/history/${id}`),
 };
 
 export default calculateApi;
