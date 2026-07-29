@@ -34,6 +34,7 @@ export default function AdminPanel() {
     title: '',
     message: '',
     confirmText: '',
+    icon: '',
     action: null
   });
 
@@ -94,6 +95,7 @@ export default function AdminPanel() {
       title: targetUser.suspended ? 'Activate Account' : 'Suspend Account',
       message: `Are you sure you want to ${targetUser.suspended ? 'activate' : 'suspend'} the account for ${targetUser.fullName || targetUser.email}?`,
       confirmText: targetUser.suspended ? 'Activate' : 'Suspend',
+      icon: targetUser.suspended ? '✅' : '🚫',
       action: async () => {
         try {
           const res = await adminApi.toggleUserSuspension(targetUser.id);
@@ -113,6 +115,7 @@ export default function AdminPanel() {
       title: 'Delete Account',
       message: `Are you sure you want to permanently DELETE ${targetUser.fullName || targetUser.email}? This action is irreversible!`,
       confirmText: 'Delete Permanently',
+      icon: '🗑️',
       action: async () => {
         try {
           const res = await adminApi.deleteUser(targetUser.id);
@@ -232,6 +235,7 @@ export default function AdminPanel() {
       title: 'Remove Team Member',
       message: `Are you sure you want to remove ${member.name} from the team list?`,
       confirmText: 'Remove',
+      icon: '🗑️',
       action: async () => {
         try {
           await adminApi.deleteTeamMember(member.id);
@@ -587,6 +591,7 @@ export default function AdminPanel() {
         title={confirm.title}
         message={confirm.message}
         confirmText={confirm.confirmText}
+        icon={confirm.icon}
         onConfirm={() => {
           if (confirm.action) confirm.action();
           setConfirm((c) => ({ ...c, isOpen: false }));

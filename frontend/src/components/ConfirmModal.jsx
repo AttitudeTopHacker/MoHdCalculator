@@ -7,7 +7,8 @@ export default function ConfirmModal({
   onConfirm, 
   onCancel, 
   confirmText = "Sign Out", 
-  cancelText = "Cancel" 
+  cancelText = "Cancel",
+  icon = "🚪"
 }) {
   if (!isOpen) return null;
 
@@ -15,7 +16,7 @@ export default function ConfirmModal({
     <div className="confirm-modal-overlay">
       <div className="confirm-modal-card">
         <div className="confirm-modal-header">
-          <span className="confirm-modal-icon">🚪</span>
+          <span className="confirm-modal-icon">{icon}</span>
           <h2 className="confirm-modal-title">{title}</h2>
         </div>
         <p className="confirm-modal-message">{message}</p>
