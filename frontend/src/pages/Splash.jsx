@@ -133,7 +133,8 @@ export default function Splash() {
       </div>
 
       <footer className="splash-footer">
-        © 2026 Salman Ansari · AreaCalculator
+        <span className="splash-brand">msm.movin</span>
+        <span className="splash-handle">@2026salmanansari</span>
       </footer>
     </div>
   );

@@ -179,13 +179,33 @@
 /* ── Footer ──────────────────────────────────── */
 .splash-footer {
   position: absolute;
-  bottom: 32px;
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  bottom: 28px;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   animation: fadeIn 1s ease-out both;
   animation-delay: 1.2s;
+}
+
+.splash-brand {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  background: linear-gradient(135deg, #2DE2C4 0%, #4F8EF7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.splash-handle {
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.22);
+  text-transform: lowercase;
 }
 
 /* ═══════════════════════════════════════════════
