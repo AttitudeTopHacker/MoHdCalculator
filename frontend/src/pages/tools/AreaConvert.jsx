@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateApi } from '../../api/calculateApi';
+import { convertArea } from '../../utils/localCalculator';
+import { queueHistory } from '../../utils/historySync';
 import './Tools.css';
 
 const UNITS = {
@@ -37,45 +38,32 @@ export default function AreaConvert() {
     setQuickConversions(null);
     setLoading(true);
     try {
-      // 1. Primary conversion
-      const res = await calculateApi.convert(val, from, to);
-      if (res.data.success) {
-        const resVal = res.data.data.result;
-        setResult(resVal);
-        
-        // Save calculation to history in background
-        try {
-          calculateApi.saveHistory(
-            'Area Conversion',
-            `${val} ${from}`,
-            `${resVal.toFixed(4)} ${to}`
-          );
-        } catch (historyErr) {
-          console.error("Failed to save history record", historyErr);
-        }
-      } else {
-        setError(res.data.message || 'Conversion failed');
-        setLoading(false);
-        return;
-      }
+      // 1. Primary conversion locally
+      const resVal = convertArea(val, from, to);
+      setResult(resVal);
+      
+      // Save calculation to history locally (background synced)
+      queueHistory(
+        'Area Conversion',
+        `${val} ${from}`,
+        `${resVal.toFixed(4)} ${to}`
+      );
 
-      // 2. Fetch all key conversions at a glance
+      // 2. Fetch all key conversions locally
       const displayKeys = ["Square Metre", "Square Feet", "Square Yard", "Acre", "Hectare", "Bigha"];
-      const promises = displayKeys.map(async (key) => {
-        const itemRes = await calculateApi.convert(val, from, key);
+      const convResults = displayKeys.map((key) => {
+        const converted = convertArea(val, from, key);
         return {
           key,
           name: UNITS[key].name,
           symbol: UNITS[key].symbol,
-          value: itemRes.data.data.result
+          value: converted
         };
       });
-
-      const convResults = await Promise.all(promises);
       setQuickConversions(convResults);
 
     } catch (err) {
-      setError(err.response?.data?.message || 'Error executing conversion on the server');
+      setError(err.message || 'Error executing conversion');
     } finally {
       setLoading(false);
     }

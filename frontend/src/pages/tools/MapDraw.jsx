@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { calculateApi } from '../../api/calculateApi';
+import { queueHistory } from '../../utils/historySync';
 import './Tools.css';
 
 export default function MapDraw() {
@@ -132,16 +132,12 @@ export default function MapDraw() {
     const calculatedArea = window.google.maps.geometry.spherical.computeArea(closedPath);
     setResult(calculatedArea);
 
-    // Save calculation to history in background
-    try {
-      calculateApi.saveHistory(
-        'Map Draw Calc',
-        `${points.length} GPS Points sketched manually on grid`,
-        `Spherical Area: ${calculatedArea.toFixed(2)} Sq Mt`
-      );
-    } catch (historyErr) {
-      console.error("Failed to save history record", historyErr);
-    }
+    // Save calculation to history locally (background synced)
+    queueHistory(
+      'Map Draw Calc',
+      `${points.length} GPS Points sketched manually on grid`,
+      `Spherical Area: ${calculatedArea.toFixed(2)} Sq Mt`
+    );
   };
 
   const handlePopPoint = () => {

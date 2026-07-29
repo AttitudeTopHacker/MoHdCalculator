@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateApi } from '../../api/calculateApi';
+import { getLengthBreadthBreakdown, getBighaBreakdown } from '../../utils/localCalculator';
+import { queueHistory } from '../../utils/historySync';
 import './Tools.css';
 
 export default function RectangleArea() {
@@ -64,36 +65,26 @@ export default function RectangleArea() {
       const sGatta = convertUnit(sVal, calculatorUnit, 'gatta');
 
       // 2. Sum Gatta dimensions matching Android SetEvaluate logic:
-      // breath1 = East + West, length1 = North + South
       const sumBreadth = eGatta + wGatta;
       const sumLength = nGatta + sGatta;
 
-      // 3. Call backend endpoint to get Acre / Beega / Bisha / Bisbanshi breakdown
-      const res = await calculateApi.lengthBreadthBreakdown(sumLength, sumBreadth);
-      if (res.data.success) {
-        const data = res.data.data;
-        setBreakdown({
-          acre: data.part1,
-          bigha: data.part2,
-          biswa: data.part3,
-          biswansi: data.part4
-        });
+      // 3. Compute breakdown locally
+      const data = getLengthBreadthBreakdown(sumLength, sumBreadth);
+      setBreakdown({
+        acre: data.part1,
+        bigha: data.part2,
+        biswa: data.part3,
+        biswansi: data.part4
+      });
 
-        // Save calculation to history in background
-        try {
-          calculateApi.saveHistory(
-            'Area Rectangle',
-            `East: ${east} ${calculatorUnit}, West: ${west} ${calculatorUnit}, North: ${north} ${calculatorUnit}, South: ${south} ${calculatorUnit}`,
-            `Breakdown: ${data.part1} Acre, ${data.part2} Bigha, ${data.part3} Biswa, ${data.part4} Biswansi`
-          );
-        } catch (historyErr) {
-          console.error("Failed to save history record", historyErr);
-        }
-      } else {
-        setError(res.data.message || 'Breakdown calculation failed');
-      }
+      // Save calculation to history locally (background synced)
+      queueHistory(
+        'Area Rectangle',
+        `East: ${east} ${calculatorUnit}, West: ${west} ${calculatorUnit}, North: ${north} ${calculatorUnit}, South: ${south} ${calculatorUnit}`,
+        `Breakdown: ${data.part1} Acre, ${data.part2} Bigha, ${data.part3} Biswa, ${data.part4} Biswansi`
+      );
     } catch (err) {
-      setError(err.response?.data?.message || 'Error occurred during calculation');
+      setError(err.message || 'Error occurred during calculation');
     } finally {
       setLoading(false);
     }
@@ -136,15 +127,13 @@ export default function RectangleArea() {
     const sqM = avgLengthM * avgBreadthM;
 
     try {
-      const res = await calculateApi.bighaBreakdown(sqM);
-      if (res.data.success) {
-        setVisualizerData({
-          sqM,
-          bigha: res.data.data.bigha,
-          biswa: res.data.data.biswa,
-          biswansi: res.data.data.biswansi
-        });
-      }
+      const breakdown = getBighaBreakdown(sqM);
+      setVisualizerData({
+        sqM,
+        bigha: breakdown.bigha,
+        biswa: breakdown.biswa,
+        biswansi: breakdown.biswansi
+      });
     } catch (err) {
       console.error('Failed to load visualizer breakdown', err);
     }

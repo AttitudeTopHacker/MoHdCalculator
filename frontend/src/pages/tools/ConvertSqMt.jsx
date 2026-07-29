@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateApi } from '../../api/calculateApi';
+import { getBighaBreakdown, convertArea } from '../../utils/localCalculator';
+import { queueHistory } from '../../utils/historySync';
 import './Tools.css';
 
 export default function ConvertSqMt() {
@@ -25,42 +26,26 @@ export default function ConvertSqMt() {
 
     setLoading(true);
     try {
-      // 1. Fetch Bigha Breakdown from backend
-      const resBreakdown = await calculateApi.bighaBreakdown(val);
+      // 1. Compute Bigha Breakdown locally
+      const breakdownData = getBighaBreakdown(val);
       
-      // 2. Fetch conversions from backend
-      const [resGaj, resSqft, resAcres, resHectares] = await Promise.all([
-        calculateApi.convert(val, "Square Metre", "Square Yard"),
-        calculateApi.convert(val, "Square Metre", "Square Feet"),
-        calculateApi.convert(val, "Square Metre", "Acre"),
-        calculateApi.convert(val, "Square Metre", "Hectare")
-      ]);
+      // 2. Compute conversions locally
+      const gaj = convertArea(val, "Square Metre", "Square Yard").toFixed(2);
+      const sqft = convertArea(val, "Square Metre", "Square Feet").toFixed(2);
+      const acres = convertArea(val, "Square Metre", "Acre").toFixed(4);
+      const hectares = convertArea(val, "Square Metre", "Hectare").toFixed(4);
 
-      if (resBreakdown.data.success) {
-        const breakdownData = resBreakdown.data.data;
-        setBreakdown(breakdownData);
-        setEquivalents({
-          gaj: resGaj.data.data.result.toFixed(2),
-          sqft: resSqft.data.data.result.toFixed(2),
-          acres: resAcres.data.data.result.toFixed(4),
-          hectares: resHectares.data.data.result.toFixed(4)
-        });
+      setBreakdown(breakdownData);
+      setEquivalents({ gaj, sqft, acres, hectares });
 
-        // Save calculation to history in background
-        try {
-          calculateApi.saveHistory(
-            'SQ_MT Convert',
-            `${val} Sq Mt`,
-            `Breakdown: ${breakdownData.bigha} Bigha, ${breakdownData.biswa} Biswa, ${breakdownData.biswansi} Biswansi`
-          );
-        } catch (historyErr) {
-          console.error("Failed to save history record", historyErr);
-        }
-      } else {
-        setError(resBreakdown.data.message || 'Breakdown calculation failed');
-      }
+      // Save calculation to history locally (background synced)
+      queueHistory(
+        'SQ_MT Convert',
+        `${val} Sq Mt`,
+        `Breakdown: ${breakdownData.bigha} Bigha, ${breakdownData.biswa} Biswa, ${breakdownData.biswansi} Biswansi`
+      );
     } catch (err) {
-      setError(err.response?.data?.message || 'Error occurred during calculation');
+      setError(err.message || 'Error occurred during calculation');
     } finally {
       setLoading(false);
     }

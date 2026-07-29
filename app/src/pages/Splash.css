@@ -1,0 +1,270 @@
+/* ═══════════════════════════════════════════════
+   SPLASH SCREEN — AreaCalculator
+   Premium animated entry with cinematic transitions
+═══════════════════════════════════════════════ */
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  background: #080b14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  overflow: hidden;
+  font-family: 'Poppins', system-ui, sans-serif;
+  animation: splashFadeIn 0.5s ease-out both;
+}
+
+/* Exit animation when navigating away */
+.splash-exit {
+  animation: splashFadeOut 0.5s ease-in both;
+  pointer-events: none;
+}
+
+/* ── Background Glow ─────────────────────────── */
+.splash-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(45, 226, 196, 0.07) 0%,
+    rgba(79, 142, 247, 0.05) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: splashGlowPulse 3s ease-in-out infinite alternate;
+}
+
+/* ── Floating Background Particles ──────────── */
+.splash-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particleFloat linear infinite;
+  opacity: 0;
+}
+
+.splash-particle-1 { width: 6px; height: 6px; background: rgba(45,226,196,0.6); top: 15%; left: 12%; animation-duration: 8s; animation-delay: 0.3s; }
+.splash-particle-2 { width: 4px; height: 4px; background: rgba(79,142,247,0.5); top: 25%; right: 18%; animation-duration: 11s; animation-delay: 1s; }
+.splash-particle-3 { width: 5px; height: 5px; background: rgba(168,85,247,0.5); bottom: 30%; left: 20%; animation-duration: 9s; animation-delay: 0.6s; }
+.splash-particle-4 { width: 3px; height: 3px; background: rgba(45,226,196,0.4); bottom: 20%; right: 15%; animation-duration: 13s; animation-delay: 1.5s; }
+.splash-particle-5 { width: 7px; height: 7px; background: rgba(79,142,247,0.3); top: 55%; left: 8%; animation-duration: 10s; animation-delay: 0.2s; }
+.splash-particle-6 { width: 4px; height: 4px; background: rgba(168,85,247,0.4); top: 40%; right: 10%; animation-duration: 7s; animation-delay: 0.8s; }
+
+/* ── Main Content Stack ──────────────────────── */
+.splash-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+/* ── Logo Container ──────────────────────────── */
+.splash-logo-container {
+  position: relative;
+  margin-bottom: 20px;
+  animation: logoEntry 1.0s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.1s;
+}
+
+.splash-logo {
+  display: block;
+  filter: drop-shadow(0 0 20px rgba(45, 226, 196, 0.25))
+          drop-shadow(0 0 40px rgba(79, 142, 247, 0.15));
+}
+
+/* SVG hex animations */
+.splash-hex-outer {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: hexDraw 1.2s ease-out 0.2s forwards;
+}
+
+.splash-hex-mid {
+  stroke-dasharray: 370;
+  stroke-dashoffset: 370;
+  animation: hexDraw 1s ease-out 0.5s forwards;
+}
+
+/* Orbit ring */
+.splash-orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  border: 1px solid rgba(45, 226, 196, 0.2);
+  animation: orbitSpin 8s linear infinite, fadeIn 0.8s ease-out 0.5s both;
+}
+
+.splash-orbit-ring::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2DE2C4;
+  transform: translateX(-50%);
+  box-shadow: 0 0 12px 4px rgba(45, 226, 196, 0.6);
+}
+
+/* ── Wordmark ────────────────────────────────── */
+.splash-wordmark {
+  margin: 0;
+  line-height: 1;
+  font-size: 3.2rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  animation: wordmarkReveal 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.5s;
+}
+
+.splash-word-area {
+  color: #ffffff;
+}
+
+.splash-word-calc {
+  background: linear-gradient(135deg, #2DE2C4 0%, #4F8EF7 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Tagline ─────────────────────────────────── */
+.splash-tagline {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin: 0;
+  animation: taglineRise 1s ease-out both;
+  animation-delay: 0.75s;
+}
+
+/* ── Animated Dots Loader ────────────────────── */
+.splash-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 48px;
+  animation: fadeIn 0.6s ease-out both;
+  animation-delay: 1s;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(45, 226, 196, 0.7);
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.dot-1 { animation-delay: 0s; }
+.dot-2 { animation-delay: 0.2s; background: rgba(79, 142, 247, 0.7); }
+.dot-3 { animation-delay: 0.4s; background: rgba(168, 85, 247, 0.7); }
+
+/* ── Footer ──────────────────────────────────── */
+.splash-footer {
+  position: absolute;
+  bottom: 28px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: fadeIn 1s ease-out both;
+  animation-delay: 1.2s;
+}
+
+.splash-brand {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  background: linear-gradient(135deg, #2DE2C4 0%, #4F8EF7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.splash-handle {
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.22);
+  text-transform: lowercase;
+}
+
+/* ═══════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════ */
+
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes splashFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.04); }
+}
+
+@keyframes splashGlowPulse {
+  from { opacity: 0.6; transform: translate(-50%, -52%) scale(1); }
+  to   { opacity: 1;   transform: translate(-50%, -52%) scale(1.08); }
+}
+
+@keyframes logoEntry {
+  0%   { opacity: 0; transform: scale(0.7) translateY(24px); }
+  60%  { transform: scale(1.04) translateY(-4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes hexDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes orbitSpin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes wordmarkReveal {
+  0%   { opacity: 0; letter-spacing: -0.15em; transform: translateY(12px); }
+  100% { opacity: 1; letter-spacing: -0.01em; transform: translateY(0); }
+}
+
+@keyframes taglineRise {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1);   opacity: 0.5; }
+  50%       { transform: scale(1.5); opacity: 1; }
+}
+
+@keyframes particleFloat {
+  0%   { opacity: 0; transform: translateY(0) scale(1); }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
+}

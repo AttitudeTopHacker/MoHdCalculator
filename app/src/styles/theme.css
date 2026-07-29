@@ -1,0 +1,54 @@
+/* ─────────────────────────────────────────────────────────────
+   AreaCalculator — Design Tokens (CSS Variables)
+   Based on PRD Section 2 — Dark Premium Theme
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Backgrounds */
+  --bg-primary:       #0D0D0D;
+  --bg-secondary:     #121212;
+  --bg-card:          rgba(15, 15, 15, 0.80);
+  --bg-input:         #1A1A1A;
+
+  /* Brand Colors */
+  --teal:             #2EE6C5;
+  --teal-dim:         rgba(46, 230, 197, 0.15);
+  --orange:           #E8791A;
+  --orange-dim:       rgba(232, 121, 26, 0.15);
+  --magenta:          #FF4EA1;
+  --magenta-dim:      rgba(255, 78, 161, 0.20);
+
+  /* Text */
+  --text-primary:     #FFFFFF;
+  --text-secondary:   #AAAAAA;
+  --text-muted:       #666666;
+  --text-teal:        #2EE6C5;
+
+  /* Borders */
+  --border-card:      #2EE6C5;
+  --border-input:     rgba(46, 230, 197, 0.40);
+  --border-input-focus: #2EE6C5;
+  --border-google:    #FF4EA1;
+
+  /* Buttons */
+  --btn-primary-bg:   #2EE6C5;
+  --btn-primary-text: #0D0D0D;
+  --btn-primary-glow: rgba(255, 78, 161, 0.45);
+
+  /* Radius */
+  --radius-card:      20px;
+  --radius-input:     12px;
+  --radius-btn:       50px;
+
+  /* Shadows */
+  --shadow-card:      0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(46, 230, 197, 0.12);
+  --shadow-btn-hover: 0 0 24px rgba(255, 78, 161, 0.50), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-input-focus: 0 0 0 2px rgba(46, 230, 197, 0.30);
+
+  /* Typography */
+  --font-main:        'Poppins', sans-serif;
+
+  /* Transitions */
+  --transition-fast:  all 0.18s ease;
+  --transition-med:   all 0.28s ease;
+}

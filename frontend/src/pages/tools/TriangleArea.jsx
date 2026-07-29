@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateApi } from '../../api/calculateApi';
+import { calculateTriangleArea, getBighaBreakdown } from '../../utils/localCalculator';
+import { queueHistory } from '../../utils/historySync';
 import './Tools.css';
 
 export default function TriangleArea() {
@@ -66,40 +67,27 @@ export default function TriangleArea() {
 
     setLoading(true);
     try {
-      // 1. Calculate Triangle Area (Heron's Formula in square meters)
-      const areaRes = await calculateApi.triangleArea(a, b, c);
-      if (areaRes.data.success) {
-        const areaSqM = areaRes.data.data.areaSqUnits;
+      // 1. Calculate Triangle Area locally
+      const areaSqM = calculateTriangleArea(a, b, c);
 
-        // 2. Fetch traditional Bigha / Biswa / Biswansi breakdown
-        const breakdownRes = await calculateApi.bighaBreakdown(areaSqM);
-        if (breakdownRes.data.success) {
-          const breakdown = breakdownRes.data.data;
-          setResult({
-            areaSqM,
-            bigha: breakdown.bigha,
-            biswa: breakdown.biswa,
-            biswansi: breakdown.biswansi
-          });
-          
-          // Save calculation to history in background
-          try {
-            calculateApi.saveHistory(
-              'Area Triangle',
-              `Side A: ${rawA} ${unit}, Side B: ${rawB} ${unit}, Side C: ${rawC} ${unit}`,
-              `Area: ${areaSqM.toFixed(2)} Sq Mt (${breakdown.bigha} Bigha, ${breakdown.biswa} Biswa, ${breakdown.biswansi} Biswansi)`
-            );
-          } catch (historyErr) {
-            console.error("Failed to save history record", historyErr);
-          }
-        } else {
-          setError(breakdownRes.data.message || 'Breakdown calculation failed');
-        }
-      } else {
-        setError(areaRes.data.message || 'Triangle calculation failed');
-      }
+      // 2. Compute Bigha breakdown locally
+      const breakdown = getBighaBreakdown(areaSqM);
+      
+      setResult({
+        areaSqM,
+        bigha: breakdown.bigha,
+        biswa: breakdown.biswa,
+        biswansi: breakdown.biswansi
+      });
+      
+      // Save calculation to history locally (background synced)
+      queueHistory(
+        'Area Triangle',
+        `Side A: ${rawA} ${unit}, Side B: ${rawB} ${unit}, Side C: ${rawC} ${unit}`,
+        `Area: ${areaSqM.toFixed(2)} Sq Mt (${breakdown.bigha} Bigha, ${breakdown.biswa} Biswa, ${breakdown.biswansi} Biswansi)`
+      );
     } catch (err) {
-      setError(err.response?.data?.message || 'Calculation failed. Please verify inputs.');
+      setError(err.message || 'Calculation failed. Please verify inputs.');
     } finally {
       setLoading(false);
     }

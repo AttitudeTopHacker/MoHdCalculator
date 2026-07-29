@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateApi } from '../../api/calculateApi';
+import { convertLength } from '../../utils/localCalculator';
+import { queueHistory } from '../../utils/historySync';
 import './Tools.css';
 
 const LENGTH_UNITS = {
@@ -34,45 +35,32 @@ export default function LengthConvert() {
 
     setLoading(true);
     try {
-      // 1. Convert current selection
-      const res = await calculateApi.lengthConvert(val, fromUnit, toUnit);
-      if (res.data.success) {
-        const resVal = res.data.data.result;
-        setResult(resVal);
-        
-        // Save calculation to history in background
-        try {
-          calculateApi.saveHistory(
-            'Length Conversion',
-            `${val} ${fromUnit}`,
-            `${resVal.toFixed(4)} ${toUnit}`
-          );
-        } catch (historyErr) {
-          console.error("Failed to save history record", historyErr);
-        }
-      } else {
-        setError(res.data.message || 'Conversion failed');
-        setLoading(false);
-        return;
-      }
+      // 1. Convert current selection locally
+      const resVal = convertLength(val, fromUnit, toUnit);
+      setResult(resVal);
+      
+      // Save calculation to history locally (background synced)
+      queueHistory(
+        'Length Conversion',
+        `${val} ${fromUnit}`,
+        `${resVal.toFixed(4)} ${toUnit}`
+      );
 
-      // 2. Fetch all other conversions for quick display
+      // 2. Fetch all other conversions locally for quick display
       const displayKeys = ["Gatta", "Meter", "Foot", "Inch"];
-      const promises = displayKeys.map(async (key) => {
-        const itemRes = await calculateApi.lengthConvert(val, fromUnit, key);
+      const convResults = displayKeys.map((key) => {
+        const converted = convertLength(val, fromUnit, key);
         return {
           key,
           name: LENGTH_UNITS[key].name,
           symbol: LENGTH_UNITS[key].symbol,
-          value: itemRes.data.data.result
+          value: converted
         };
       });
-
-      const convResults = await Promise.all(promises);
       setQuickConversions(convResults);
 
     } catch (err) {
-      setError(err.response?.data?.message || 'Error executing length conversion on backend');
+      setError(err.message || 'Error executing length conversion');
     } finally {
       setLoading(false);
     }
