@@ -330,6 +330,7 @@ export default function AdminPanel() {
               <div className="admin-empty-state">No users found matching query.</div>
             ) : (
               <div className="admin-table-container">
+                {/* Desktop Table View */}
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -400,6 +401,70 @@ export default function AdminPanel() {
                     })}
                   </tbody>
                 </table>
+
+                {/* Mobile Cards List View */}
+                <div className="admin-mobile-list">
+                  {users.map((u) => {
+                    const userInitials = u.fullName
+                      ? u.fullName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase()
+                      : u.email.substring(0, 2).toUpperCase();
+
+                    return (
+                      <div key={u.id} className={`admin-mobile-card ${u.suspended ? 'suspended' : ''}`}>
+                        <div className="card-header-row">
+                          <div className="table-avatar">
+                            {u.pictureUrl ? (
+                              <img src={u.pictureUrl} alt={u.fullName} className="table-avatar-img" />
+                            ) : (
+                              userInitials
+                            )}
+                          </div>
+                          <div className="card-user-info">
+                            <span className="card-user-name">
+                              {u.fullName || '—'}
+                              {u.id === user.id && <span className="table-self-badge">(You)</span>}
+                            </span>
+                            <span className="card-user-email">{u.email}</span>
+                          </div>
+                        </div>
+
+                        <div className="card-badges-row">
+                          <div className="badge-item">
+                            <span className="badge-label">Method</span>
+                            <span className={`table-provider-badge ${u.provider.toLowerCase()}`}>
+                              {u.provider}
+                            </span>
+                          </div>
+                          <div className="badge-item">
+                            <span className="badge-label">Status</span>
+                            <span className={`table-status-badge ${u.suspended ? 'suspended' : 'active'}`}>
+                              {u.suspended ? 'Suspended' : 'Active'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="card-actions-row">
+                          <button
+                            type="button"
+                            className={`table-action-btn suspend-btn ${u.suspended ? 'activate' : ''}`}
+                            onClick={() => handleToggleSuspend(u)}
+                            disabled={u.id === user.id}
+                          >
+                            {u.suspended ? 'Activate' : 'Suspend'}
+                          </button>
+                          <button
+                            type="button"
+                            className="table-action-btn delete-btn"
+                            onClick={() => handleDeleteUser(u)}
+                            disabled={u.id === user.id}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </section>

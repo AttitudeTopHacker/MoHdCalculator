@@ -879,3 +879,108 @@
   box-shadow: 0 0 12px rgba(46, 230, 197, 0.4);
 }
 
+/* Responsive Table & User Cards View */
+.admin-mobile-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .admin-table {
+    display: none !important;
+  }
+
+  .admin-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .admin-mobile-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .admin-mobile-card:hover {
+    border-color: rgba(46, 230, 197, 0.25);
+  }
+
+  .admin-mobile-card.suspended {
+    border-color: rgba(255, 78, 161, 0.25);
+    opacity: 0.8;
+  }
+
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+  }
+
+  .card-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .card-user-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .card-user-email {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    word-break: break-all;
+  }
+
+  .card-badges-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.015);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .badge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .badge-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .card-actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .card-actions-row .table-action-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+}
+
+
