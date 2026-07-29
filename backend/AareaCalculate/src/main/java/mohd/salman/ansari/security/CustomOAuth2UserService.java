@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import mohd.salman.ansari.entity.Provider;
 import mohd.salman.ansari.entity.User;
 import mohd.salman.ansari.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,20 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final UserRepository userRepository;
 
+    @Value("${app.admin-emails}")
+    private String adminEmails;
+
+    private boolean checkIsAdmin(String email) {
+        if (adminEmails == null || email == null) return false;
+        String[] emails = adminEmails.split(",");
+        for (String e : emails) {
+            if (e.trim().equalsIgnoreCase(email.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         // Fetch user attributes from Google
@@ -36,6 +52,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         // Upsert user — create if not exists, update name if needed
         User user = userRepository.findByEmail(email).orElse(null);
 
+        if (user != null && user.isSuspended()) {
+            throw new OAuth2AuthenticationException(
+                new OAuth2Error("suspended_user"), "Your account is suspended. Please contact support."
+            );
+        }
+
+        boolean isAdmin = checkIsAdmin(email);
+
         if (user == null) {
             // New Google user
             user = User.builder()
@@ -45,18 +69,28 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     .pictureUrl(pictureUrl)
                     .isVerified(true)   // Google accounts are already verified
                     .isProfileSetup(false) // Needs name/password setup
+                    .isAdmin(isAdmin)
                     .build();
             userRepository.save(user);
         } else if (user.getProvider() == Provider.LOCAL) {
             // Existing local user — link Google to their account
             user.setVerified(true);
             user.setProfileSetup(true); // Local users already have a profile
+            user.setAdmin(isAdmin);
             if (pictureUrl != null) user.setPictureUrl(pictureUrl);
             userRepository.save(user);
         } else {
-            // Returning Google user — update picture if changed
+            // Returning Google user — update picture or admin flag if changed
+            boolean updated = false;
             if (pictureUrl != null && !pictureUrl.equals(user.getPictureUrl())) {
                 user.setPictureUrl(pictureUrl);
+                updated = true;
+            }
+            if (user.isAdmin() != isAdmin) {
+                user.setAdmin(isAdmin);
+                updated = true;
+            }
+            if (updated) {
                 userRepository.save(user);
             }
         }

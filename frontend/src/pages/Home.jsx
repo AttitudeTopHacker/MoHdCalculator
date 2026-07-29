@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { adminApi } from '../api/adminApi';
 import WaveBackground from '../components/WaveBackground';
 import ConfirmModal from '../components/ConfirmModal';
 import './Home.css';
@@ -31,6 +32,13 @@ const FEATURES = [
 export default function Home() {
   const { isAuthenticated, logout } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [team, setTeam] = useState([]);
+
+  useEffect(() => {
+    adminApi.publicGetTeam()
+      .then((res) => setTeam(res.data.data))
+      .catch((err) => console.error("Error fetching team list:", err));
+  }, []);
 
   const handleLogout = () => {
     setShowConfirm(true);
@@ -144,6 +152,31 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ── Meet Our Team ────────────────────────────────────── */}
+      {team.length > 0 && (
+        <section className="team-section-public">
+          <p className="section-eyebrow">Our Experts</p>
+          <h2 className="section-heading">Meet Our Team</h2>
+
+          <div className="team-public-grid">
+            {team.map((member) => (
+              <div className="team-public-card" key={member.id}>
+                <div className="team-public-avatar">
+                  {member.pictureUrl ? (
+                    <img src={member.pictureUrl} alt={member.name} className="team-public-avatar-img" />
+                  ) : (
+                    member.name.substring(0, 2).toUpperCase()
+                  )}
+                </div>
+                <h3 className="team-public-name">{member.name}</h3>
+                <span className="team-public-email">{member.email}</span>
+                <p className="team-public-about">{member.about || 'Team expert and contributor.'}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── CTA Banner ───────────────────────────────────────── */}
       <section className="cta-banner">

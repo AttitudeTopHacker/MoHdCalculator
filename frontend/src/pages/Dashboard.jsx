@@ -301,6 +301,15 @@ export default function Dashboard() {
                 >
                   🏠 Go to Home
                 </Link>
+                {(user.admin || user.isAdmin) && (
+                  <Link
+                    className="dropdown-item"
+                    to="/dashboard/admin"
+                    style={{ textDecoration: 'none', color: 'inherit', display: 'block', textAlign: 'left' }}
+                  >
+                    ⚙️ Admin Panel
+                  </Link>
+                )}
                 <button
                   className="dropdown-item"
                   onClick={() => { setModalOpen(true); setDropdownOpen(false); }}

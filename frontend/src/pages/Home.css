@@ -359,10 +359,94 @@
 }
 .footer-link:hover { color: var(--teal); }
 
+/* ── Meet Our Team ──────────────────────────────────────────────── */
+.team-section-public {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.team-public-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  width: 100%;
+  margin-top: 40px;
+}
+
+.team-public-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 30px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease, border-color 0.3s;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.team-public-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(46, 230, 197, 0.25);
+  box-shadow: 0 8px 36px rgba(46, 230, 197, 0.08);
+}
+
+.team-public-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--teal-dim);
+  border: 2px solid var(--teal);
+  color: var(--teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.6rem;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 0 16px rgba(46, 230, 197, 0.15);
+}
+
+.team-public-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.team-public-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.team-public-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+.team-public-about {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .home-nav   { padding: 16px 24px; }
   .features   { padding: 60px 24px; }
+  .team-section-public { padding: 60px 24px; }
+  .team-public-grid { gap: 20px; }
   .home-footer { padding: 20px 24px; flex-direction: column; align-items: center; text-align: center; }
   .cta-banner-inner { padding: 36px 24px; }
   .cta-banner-heading { font-size: 1.8rem; }

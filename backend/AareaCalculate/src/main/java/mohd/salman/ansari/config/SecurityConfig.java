@@ -66,8 +66,10 @@ public class SecurityConfig {
                     "/api/v1/auth/forgot-password",
                     "/api/v1/auth/reset-password",
                     "/login/oauth2/**",
-                    "/oauth2/**"
+                    "/oauth2/**",
+                    "/api/v1/public/**"
                 ).permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
 

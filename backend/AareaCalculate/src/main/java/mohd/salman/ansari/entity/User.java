@@ -50,6 +50,14 @@ public class User {
     @Builder.Default
     private boolean isProfileSetup = true;
 
+    @Column(name = "is_admin")
+    @Builder.Default
+    private boolean isAdmin = false;
+
+    @Column(name = "is_suspended")
+    @Builder.Default
+    private boolean isSuspended = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

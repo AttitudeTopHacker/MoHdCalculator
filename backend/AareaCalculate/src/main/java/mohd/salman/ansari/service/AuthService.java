@@ -10,6 +10,7 @@ import mohd.salman.ansari.exception.*;
 import mohd.salman.ansari.repository.OtpRepository;
 import mohd.salman.ansari.repository.UserRepository;
 import mohd.salman.ansari.security.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,20 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
 
+    @Value("${app.admin-emails}")
+    private String adminEmails;
+
+    private boolean checkIsAdmin(String email) {
+        if (adminEmails == null || email == null) return false;
+        String[] emails = adminEmails.split(",");
+        for (String e : emails) {
+            if (e.trim().equalsIgnoreCase(email.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ── Signup ───────────────────────────────────────────────────────────────
 
     @Transactional
@@ -43,6 +58,8 @@ public class AuthService {
                     "An account with email '" + request.getEmail() + "' already exists.");
         }
 
+        boolean isAdmin = checkIsAdmin(request.getEmail());
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail().toLowerCase().trim())
@@ -50,6 +67,7 @@ public class AuthService {
                 .provider(Provider.LOCAL)
                 .isVerified(false)
                 .isProfileSetup(true) // local users set name/password on signup
+                .isAdmin(isAdmin)
                 .build();
 
         userRepository.save(user);
@@ -137,6 +155,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail().toLowerCase().trim())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password."));
 
+        if (user.isSuspended()) {
+            throw new InvalidCredentialsException("Your account has been suspended. Please contact support.");
+        }
+
         // Block login if no password is set (Google-only accounts that never set a password)
         if (user.getPasswordHash() == null) {
             throw new InvalidCredentialsException("This account has no password set. Please use 'Continue with Google' or set a password via Edit Profile.");
@@ -148,6 +170,13 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid email or password.");
+        }
+
+        // Sync admin status
+        boolean shouldBeAdmin = checkIsAdmin(user.getEmail());
+        if (user.isAdmin() != shouldBeAdmin) {
+            user.setAdmin(shouldBeAdmin);
+            userRepository.save(user);
         }
 
         String token = jwtUtil.generateToken(user.getEmail());

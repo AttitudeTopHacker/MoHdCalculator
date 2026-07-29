@@ -11,6 +11,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import OAuth2Callback from './pages/OAuth2Callback';
 import OAuth2Error from './pages/OAuth2Error';
+import AdminPanel from './pages/AdminPanel';
 import MapAuto from './pages/tools/MapAuto';
 import MapManual from './pages/tools/MapManual';
 import MapDraw from './pages/tools/MapDraw';
@@ -78,6 +79,15 @@ function PublicOnlyRoute({ children }) {
   return children;
 }
 
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user && !(user.admin || user.isAdmin)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -103,6 +113,7 @@ export default function App() {
           {/* Protected routes */}
           <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
           <Route path="/dashboard"     element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
           <Route path="/dashboard/map-auto" element={<ProtectedRoute><MapAuto /></ProtectedRoute>} />
           <Route path="/dashboard/map-manual" element={<ProtectedRoute><MapManual /></ProtectedRoute>} />
           <Route path="/dashboard/map-draw" element={<ProtectedRoute><MapDraw /></ProtectedRoute>} />
