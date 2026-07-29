@@ -39,12 +39,20 @@ public class AdminController {
     @GetMapping("/users")
     public ApiResponse<List<UserResponse>> getAllUsers(@RequestParam(required = false) String search) {
         log.info("Admin fetch users requested with search query: '{}'", search);
-        List<UserResponse> list = userRepository.findAll().stream()
+        List<User> allUsers = userRepository.findAll();
+        log.info("Total users in database: {}", allUsers.size());
+        for (User u : allUsers) {
+            log.info("User in DB: email={}, fullName={}, admin={}, suspended={}", 
+                u.getEmail(), u.getFullName(), u.isAdmin(), u.isSuspended());
+        }
+        
+        List<UserResponse> list = allUsers.stream()
                 .filter(u -> search == null || search.trim().isEmpty() ||
                         (u.getFullName() != null && u.getFullName().toLowerCase().contains(search.toLowerCase().trim())) ||
                         (u.getEmail() != null && u.getEmail().toLowerCase().contains(search.toLowerCase().trim())))
                 .map(UserResponse::from)
                 .toList();
+        log.info("Filtered users count to return: {}", list.size());
         return ApiResponse.success("Users fetched successfully.", list);
     }
 

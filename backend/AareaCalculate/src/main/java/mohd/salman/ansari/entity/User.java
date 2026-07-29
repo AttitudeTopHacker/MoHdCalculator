@@ -52,11 +52,27 @@ public class User {
 
     @Column(name = "is_admin")
     @Builder.Default
-    private boolean isAdmin = false;
+    private Boolean isAdmin = false;
 
     @Column(name = "is_suspended")
     @Builder.Default
-    private boolean isSuspended = false;
+    private Boolean isSuspended = false;
+
+    public boolean isAdmin() {
+        return isAdmin != null && isAdmin;
+    }
+
+    public boolean isSuspended() {
+        return isSuspended != null && isSuspended;
+    }
+
+    public void setAdmin(Boolean admin) {
+        this.isAdmin = admin;
+    }
+
+    public void setSuspended(Boolean suspended) {
+        this.isSuspended = suspended;
+    }
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

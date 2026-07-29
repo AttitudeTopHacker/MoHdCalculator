@@ -31,6 +31,16 @@ public class DatabaseCleanUp {
             } else {
                 log.info("DATABASE CLEANUP: 'picture_url' column type is: {}. No action needed.", dataType);
             }
+
+            // CLEANUP: Update existing null values for is_admin and is_suspended to false
+            try {
+                log.info("DATABASE CLEANUP: Updating existing NULL values for is_admin and is_suspended to false...");
+                jdbcTemplate.execute("UPDATE users SET is_admin = false WHERE is_admin IS NULL");
+                jdbcTemplate.execute("UPDATE users SET is_suspended = false WHERE is_suspended IS NULL");
+                log.info("DATABASE CLEANUP: Update query execution successful.");
+            } catch (Exception ex) {
+                log.warn("DATABASE CLEANUP: Failed to update NULL columns to false: {}", ex.getMessage());
+            }
         } catch (Exception e) {
             log.warn("DATABASE CLEANUP: Bypassed database check or table/column does not exist yet: {}", e.getMessage());
         }
