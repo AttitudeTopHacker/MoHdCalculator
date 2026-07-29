@@ -42,7 +42,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://areacalculator-backend.onrender.com/login/oauth2/code/{registrationId}"
 
 # ── JWT ──────────────────────────────────────────────────────────────────────
 jwt:
@@ -57,6 +57,7 @@ app:
 # ── Server ───────────────────────────────────────────────────────────────────
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging:
