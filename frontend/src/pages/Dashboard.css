@@ -249,14 +249,68 @@
 }
 
 .modal-card {
-  width: 100%;
+  width: 90%;
   max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: #101010;
   border: 1px solid var(--teal);
   border-radius: 20px;
   padding: 36px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--teal) #101010;
+}
+
+.modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-card::-webkit-scrollbar-track {
+  background: #101010;
+}
+.modal-card::-webkit-scrollbar-thumb {
+  background-color: var(--teal);
+  border-radius: 6px;
+}
+
+@media (max-width: 500px) {
+  .modal-card {
+    padding: 24px 20px;
+    border-radius: 16px;
+    width: 95%;
+  }
+  .modal-title {
+    font-size: 1.35rem;
+  }
+  .modal-desc {
+    font-size: 0.8rem;
+  }
+  .modal-actions {
+    margin-top: 20px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .btn-cancel, .modal-card button[type="submit"] {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+@media (max-height: 620px) {
+  .modal-card {
+    padding: 20px;
+  }
+  .modal-avatar-section {
+    margin-bottom: 12px;
+  }
+  .modal-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  .modal-avatar-initials {
+    font-size: 1.3rem;
+  }
 }
 
 .modal-header {

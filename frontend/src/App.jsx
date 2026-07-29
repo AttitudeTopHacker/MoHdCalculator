@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import OAuth2Callback from './pages/OAuth2Callback';
+import OAuth2Error from './pages/OAuth2Error';
 import MapAuto from './pages/tools/MapAuto';
 import MapManual from './pages/tools/MapManual';
 import MapDraw from './pages/tools/MapDraw';
@@ -86,7 +87,7 @@ export default function App() {
           <Route path="/" element={<Splash />} />
 
           {/* Home / Landing */}
-          <Route path="/home" element={<PublicOnlyRoute><Home /></PublicOnlyRoute>} />
+          <Route path="/home" element={<Home />} />
 
           {/* Auth routes */}
           <Route path="/login"           element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
@@ -95,8 +96,9 @@ export default function App() {
           <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
           <Route path="/reset-password"  element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
 
-          {/* Google OAuth2 callback */}
+          {/* Google OAuth2 callback & error */}
           <Route path="/oauth2/callback" element={<OAuth2Callback />} />
+          <Route path="/oauth2/error" element={<OAuth2Error />} />
 
           {/* Protected routes */}
           <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />

@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import WaveBackground from '../components/WaveBackground';
+import ConfirmModal from '../components/ConfirmModal';
 import './Home.css';
 
 const FEATURES = [
@@ -26,6 +29,18 @@ const FEATURES = [
 ];
 
 export default function Home() {
+  const { isAuthenticated, logout } = useAuth();
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleLogout = () => {
+    setShowConfirm(true);
+  };
+
+  const confirmSignOut = () => {
+    logout();
+    setShowConfirm(false);
+  };
+
   return (
     <div className="home">
       <WaveBackground />
@@ -37,8 +52,31 @@ export default function Home() {
           <span className="nav-logo-text">AreaCalculator</span>
         </div>
         <nav className="nav-links">
-          <Link to="/login"  className="nav-link">Login</Link>
-          <Link to="/signup" className="nav-btn">Get Started</Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" className="nav-btn">Dashboard</Link>
+              <button
+                onClick={handleLogout}
+                className="nav-link"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontSize: 'inherit',
+                  fontWeight: 'inherit',
+                  padding: 0
+                }}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login"  className="nav-link">Login</Link>
+              <Link to="/signup" className="nav-btn">Get Started</Link>
+            </>
+          )}
         </nav>
       </header>
 
@@ -58,12 +96,20 @@ export default function Home() {
         </p>
 
         <div className="hero-cta">
-          <Link to="/signup" className="cta-primary" id="hero-signup-btn">
-            Start for Free
-          </Link>
-          <Link to="/login" className="cta-secondary" id="hero-login-btn">
-            Sign In →
-          </Link>
+          {isAuthenticated ? (
+            <Link to="/dashboard" className="cta-primary" id="hero-dashboard-btn">
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link to="/signup" className="cta-primary" id="hero-signup-btn">
+                Start for Free
+              </Link>
+              <Link to="/login" className="cta-secondary" id="hero-login-btn">
+                Sign In →
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Floating stat chips */}
@@ -102,13 +148,23 @@ export default function Home() {
       {/* ── CTA Banner ───────────────────────────────────────── */}
       <section className="cta-banner">
         <div className="cta-banner-inner">
-          <h2 className="cta-banner-heading">Ready to Calculate?</h2>
+          <h2 className="cta-banner-heading">
+            {isAuthenticated ? 'Welcome Back!' : 'Ready to Calculate?'}
+          </h2>
           <p className="cta-banner-sub">
-            Sign up in seconds. No credit card required.
+            {isAuthenticated
+              ? 'You are logged in. Access your calculations via Dashboard.'
+              : 'Sign up in seconds. No credit card required.'}
           </p>
-          <Link to="/signup" className="cta-primary" id="bottom-signup-btn">
-            Create Free Account
-          </Link>
+          {isAuthenticated ? (
+            <Link to="/dashboard" className="cta-primary" id="bottom-dashboard-btn">
+              Go to Dashboard
+            </Link>
+          ) : (
+            <Link to="/signup" className="cta-primary" id="bottom-signup-btn">
+              Create Free Account
+            </Link>
+          )}
         </div>
       </section>
 
@@ -119,10 +175,22 @@ export default function Home() {
           Built by <strong style={{ color: 'var(--teal)' }}>Salman Ansari</strong> · 2026
         </span>
         <div className="footer-links">
-          <Link to="/login"  className="footer-link">Login</Link>
-          <Link to="/signup" className="footer-link">Sign Up</Link>
+          {isAuthenticated ? (
+            <Link to="/dashboard" className="footer-link">Dashboard</Link>
+          ) : (
+            <>
+              <Link to="/login"  className="footer-link">Login</Link>
+              <Link to="/signup" className="footer-link">Sign Up</Link>
+            </>
+          )}
         </div>
       </footer>
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        onConfirm={confirmSignOut}
+        onCancel={() => setShowConfirm(false)}
+      />
     </div>
   );
 }

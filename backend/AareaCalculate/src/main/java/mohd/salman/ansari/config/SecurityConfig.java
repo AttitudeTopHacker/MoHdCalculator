@@ -74,10 +74,12 @@ public class SecurityConfig {
             // Google OAuth2 login
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization -> authorization
+                    .baseUri("/login/oauth2")
                     .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
                 )
                 .userInfoEndpoint(info -> info.userService(customOAuth2UserService))
                 .successHandler(oauth2SuccessHandler)
+                .failureUrl(frontendUrl + "/oauth2/error")
             )
 
             // JWT filter before standard auth filter
@@ -114,7 +116,7 @@ public class SecurityConfig {
             ClientRegistrationRepository clientRegistrationRepository) {
         DefaultOAuth2AuthorizationRequestResolver authorizationRequestResolver =
                 new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository, "/oauth2/authorization");
+                        clientRegistrationRepository, "/login/oauth2");
         authorizationRequestResolver.setAuthorizationRequestCustomizer(
                 customizer -> customizer.additionalParameters(
                         params -> params.put("prompt", "select_account")));

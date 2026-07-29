@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/authApi';
 import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import './Dashboard.css';
 
 const TOOLS = [
@@ -97,6 +98,7 @@ export default function Dashboard() {
   // Dropdown & Modal States
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -128,6 +130,21 @@ export default function Dashboard() {
       navigate('/profile-setup', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
+
+  // Intercept browser back button to redirect to /home instead of Google Sign-in page
+  useEffect(() => {
+    window.history.pushState(null, null, window.location.pathname);
+    
+    const handlePopState = () => {
+      window.history.pushState(null, null, window.location.pathname);
+      navigate('/home', { replace: true });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
 
   // Sync edit profile form with user details when modal opens
   useEffect(() => {
@@ -161,6 +178,11 @@ export default function Dashboard() {
   }, []);
 
   const handleLogout = () => {
+    setDropdownOpen(false);
+    setShowConfirm(true);
+  };
+
+  const confirmSignOut = () => {
     logout();
     navigate('/login');
   };
@@ -252,10 +274,10 @@ export default function Dashboard() {
 
       {/* ── Nav Header ─────────────────────────────────────────── */}
       <header className="dashboard-header">
-        <div className="dashboard-logo">
+        <Link to="/home" className="dashboard-logo" style={{ textDecoration: 'none' }}>
           <span className="logo-icon">◈</span>
           <span className="logo-text">AreaCalculator</span>
-        </div>
+        </Link>
 
         <div className="dashboard-actions">
           <div className="profile-avatar-container" ref={dropdownRef}>
@@ -272,6 +294,13 @@ export default function Dashboard() {
                   <div className="dropdown-name">{user.fullName || 'User'}</div>
                   <div className="dropdown-email">{user.email}</div>
                 </div>
+                <Link
+                  className="dropdown-item"
+                  to="/home"
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block', textAlign: 'left' }}
+                >
+                  🏠 Go to Home
+                </Link>
                 <button
                   className="dropdown-item"
                   onClick={() => { setModalOpen(true); setDropdownOpen(false); }}
@@ -486,6 +515,12 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        onConfirm={confirmSignOut}
+        onCancel={() => setShowConfirm(false)}
+      />
     </div>
   );
 }

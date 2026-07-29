@@ -60,7 +60,7 @@ export const authApi = {
 // Redirects browser to Spring Security's OAuth2 authorization page.
 export const triggerGoogleLogin = () => {
   const backendBase = BASE_URL.replace('/api/v1', '');
-  window.location.href = `${backendBase}/oauth2/authorization/google`;
+  window.location.href = `${backendBase}/login/oauth2/google`;
 };
 
 export default api;

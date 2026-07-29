@@ -33,7 +33,6 @@ public class User {
     private String passwordHash;
 
     /** Profile picture — Google URL for OAuth users, base64 data URL for uploaded pics */
-    @Lob
     @Column(name = "picture_url", columnDefinition = "TEXT")
     private String pictureUrl;
 
