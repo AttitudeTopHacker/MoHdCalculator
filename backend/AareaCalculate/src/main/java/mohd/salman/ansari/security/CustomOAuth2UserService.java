@@ -45,7 +45,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         OAuth2User oAuth2User = new DefaultOAuth2UserService().loadUser(userRequest);
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String email      = (String) attributes.get("email");
+        String rawEmail   = (String) attributes.get("email");
+        String email      = rawEmail != null ? rawEmail.toLowerCase().trim() : null;
         String fullName   = (String) attributes.get("name");
         String pictureUrl = (String) attributes.get("picture"); // Google profile pic
 
