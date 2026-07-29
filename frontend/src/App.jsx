@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import OAuth2Callback from './pages/OAuth2Callback';
 import OAuth2Error from './pages/OAuth2Error';
 import AdminPanel from './pages/AdminPanel';
+import About from './pages/About';
 import MapAuto from './pages/tools/MapAuto';
 import MapManual from './pages/tools/MapManual';
 import MapDraw from './pages/tools/MapDraw';
@@ -98,6 +99,7 @@ export default function App() {
 
           {/* Home / Landing */}
           <Route path="/home" element={<Home />} />
+          <Route path="/about" element={<About />} />
 
           {/* Auth routes */}
           <Route path="/login"           element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />

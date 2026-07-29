@@ -60,6 +60,7 @@ export default function Home() {
           <span className="nav-logo-text">AreaCalculator</span>
         </div>
         <nav className="nav-links">
+          <Link to="/about" className="nav-link">About</Link>
           {isAuthenticated ? (
             <>
               <Link to="/dashboard" className="nav-btn">Dashboard</Link>
@@ -208,6 +209,7 @@ export default function Home() {
           Built by <strong style={{ color: 'var(--teal)' }}>Salman Ansari</strong> · 2026
         </span>
         <div className="footer-links">
+          <Link to="/about" className="footer-link">About</Link>
           {isAuthenticated ? (
             <Link to="/dashboard" className="footer-link">Dashboard</Link>
           ) : (
