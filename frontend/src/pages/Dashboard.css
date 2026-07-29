@@ -699,3 +699,24 @@
 .modal-avatar-remove:hover {
   opacity: 1;
 }
+
+@media (max-width: 600px) {
+  .filter-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px;
+    justify-content: center;
+    width: 100%;
+  }
+  .filter-tab {
+    flex: 1 1 auto;
+    font-size: 0.76rem;
+    padding: 6px 10px;
+    text-align: center;
+  }
+  .section-header {
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+}
+
