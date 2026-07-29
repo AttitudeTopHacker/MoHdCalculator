@@ -70,6 +70,13 @@ export default function ForgotPassword() {
     <div className="auth-page">
       <WaveBackground />
 
+      <header className="auth-header">
+        <Link to="/" className="auth-logo">MoHd Calculator</Link>
+        <Link to="/" className="auth-home-btn">
+          <span>🏠 Home</span>
+        </Link>
+      </header>
+
       {toast && (
         <Toast
           message={toast.message}

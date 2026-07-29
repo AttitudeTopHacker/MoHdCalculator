@@ -92,3 +92,68 @@
   padding: 4px 0;
   text-decoration: underline;
 }
+
+/* Floating Auth Header / Navbar */
+.auth-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 60px;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.auth-logo {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: opacity 0.2s;
+}
+
+.auth-logo:hover {
+  opacity: 0.85;
+}
+
+.auth-home-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s;
+}
+
+.auth-home-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 600px) {
+  .auth-header {
+    padding: 16px 20px;
+  }
+  .auth-logo {
+    font-size: 1.1rem;
+  }
+  .auth-home-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+}
+
