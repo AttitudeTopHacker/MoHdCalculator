@@ -40,6 +40,15 @@ export default function AdminPanel() {
   // Notifications
   const [toast, setToast] = useState(null);
 
+  // Crop Modal State
+  const [cropModal, setCropModal] = useState({
+    isOpen: false,
+    imageSrc: '',
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0
+  });
+
   useEffect(() => {
     fetchUsers();
     fetchTeam();
@@ -117,7 +126,7 @@ export default function AdminPanel() {
     });
   };
 
-  // Add Team Member Upload
+  // Add Team Member Upload & Open Cropper
   const handleTeamPicChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -126,8 +135,66 @@ export default function AdminPanel() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => setTeamPic(ev.target.result);
+    reader.onload = (ev) => {
+      setCropModal({
+        isOpen: true,
+        imageSrc: ev.target.result,
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0
+      });
+    };
     reader.readAsDataURL(file);
+  };
+
+  const closeCropModal = () => {
+    setCropModal({ isOpen: false, imageSrc: '', zoom: 1, offsetX: 0, offsetY: 0 });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const applyCrop = () => {
+    const img = new Image();
+    img.src = cropModal.imageSrc;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+
+      // Clear canvas
+      ctx.clearRect(0, 0, 200, 200);
+
+      // Math for drawing centered
+      const imgAspectRatio = img.width / img.height;
+      let drawWidth, drawHeight;
+
+      if (imgAspectRatio > 1) {
+        drawHeight = 200;
+        drawWidth = 200 * imgAspectRatio;
+      } else {
+        drawWidth = 200;
+        drawHeight = 200 / imgAspectRatio;
+      }
+
+      // Apply zoom
+      drawWidth *= cropModal.zoom;
+      drawHeight *= cropModal.zoom;
+
+      // Centered positions
+      const centerX = 100;
+      const centerY = 100;
+
+      // Offset scale adjustment: container is 250px, canvas is 200px (factor = 0.8)
+      const scaleFactor = 200 / 250;
+      const startX = centerX - (drawWidth / 2) + (cropModal.offsetX * scaleFactor);
+      const startY = centerY - (drawHeight / 2) + (cropModal.offsetY * scaleFactor);
+
+      ctx.drawImage(img, startX, startY, drawWidth, drawHeight);
+
+      const croppedBase64 = canvas.toDataURL('image/jpeg', 0.9);
+      setTeamPic(croppedBase64);
+      setCropModal({ isOpen: false, imageSrc: '', zoom: 1, offsetX: 0, offsetY: 0 });
+    };
   };
 
   const handleAddTeamMember = async (e) => {
@@ -461,6 +528,77 @@ export default function AdminPanel() {
         }}
         onCancel={() => setConfirm((c) => ({ ...c, isOpen: false }))}
       />
+
+      {/* Image Cropper Modal */}
+      {cropModal.isOpen && (
+        <div className="crop-modal-overlay">
+          <div className="crop-modal-card">
+            <div className="crop-modal-header">
+              <h3>Crop Profile Picture</h3>
+              <button className="close-crop-btn" onClick={closeCropModal}>✕</button>
+            </div>
+
+            <div className="crop-modal-body">
+              {/* Preview Viewport */}
+              <div className="crop-viewport-container">
+                <img
+                  src={cropModal.imageSrc}
+                  alt="To Crop"
+                  className="crop-image-preview"
+                  style={{
+                    transform: `translate(${cropModal.offsetX}px, ${cropModal.offsetY}px) scale(${cropModal.zoom})`,
+                  }}
+                />
+                <div className="crop-ring-overlay" />
+              </div>
+
+              {/* Sliders */}
+              <div className="crop-sliders-container">
+                <div className="crop-slider-group">
+                  <label>🔍 Zoom ({cropModal.zoom.toFixed(1)}x)</label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.1"
+                    value={cropModal.zoom}
+                    onChange={(e) => setCropModal(c => ({ ...c, zoom: parseFloat(e.target.value) }))}
+                  />
+                </div>
+
+                <div className="crop-slider-group">
+                  <label>↔ Horizontal Position</label>
+                  <input
+                    type="range"
+                    min="-150"
+                    max="150"
+                    step="1"
+                    value={cropModal.offsetX}
+                    onChange={(e) => setCropModal(c => ({ ...c, offsetX: parseInt(e.target.value) }))}
+                  />
+                </div>
+
+                <div className="crop-slider-group">
+                  <label>↕ Vertical Position</label>
+                  <input
+                    type="range"
+                    min="-150"
+                    max="150"
+                    step="1"
+                    value={cropModal.offsetY}
+                    onChange={(e) => setCropModal(c => ({ ...c, offsetY: parseInt(e.target.value) }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="crop-modal-footer">
+              <button className="crop-cancel-btn" onClick={closeCropModal}>Cancel</button>
+              <button className="crop-apply-btn" onClick={applyCrop}>Apply Crop</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
