@@ -124,16 +124,16 @@ export default function Home() {
         {/* Floating stat chips */}
         <div className="hero-stats">
           <div className="stat-chip">
-            <span className="stat-num">5</span>
-            <span className="stat-label">API Endpoints</span>
+            <span className="stat-num">10+</span>
+            <span className="stat-label">Shape Types</span>
           </div>
           <div className="stat-chip">
-            <span className="stat-num">JWT</span>
-            <span className="stat-label">Stateless Auth</span>
+            <span className="stat-num">🔐</span>
+            <span className="stat-label">Secure Login</span>
           </div>
           <div className="stat-chip">
-            <span className="stat-num">OAuth2</span>
-            <span className="stat-label">Google Login</span>
+            <span className="stat-num">☁</span>
+            <span className="stat-label">Cloud Synced</span>
           </div>
         </div>
       </section>
