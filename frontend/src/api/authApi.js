@@ -54,6 +54,9 @@ export const authApi = {
 
   getMe: () =>
     api.get('/auth/me'),
+
+  checkHealth: () =>
+    api.get('/public/health'),
 };
 
 // ── Google OAuth2 ─────────────────────────────────────────────────────────────

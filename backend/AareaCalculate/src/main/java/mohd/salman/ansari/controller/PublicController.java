@@ -25,4 +25,8 @@ public class PublicController {
         List<TeamMember> team = teamMemberRepository.findAll();
         return ApiResponse.success("Team list fetched successfully.", team);
     }
+    @GetMapping("/health")
+    public String health() {
+        return "OK";
+    }
 }
