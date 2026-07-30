@@ -6,6 +6,7 @@
     "GoogleAuth": {
       "scopes": ["profile", "email"],
       "androidClientId": "171584455552-8nqhjcm8lfn3u2otme8nrhv7n7ndv6af.apps.googleusercontent.com",
+      "serverClientId": "171584455552-8nqhjcm8lfn3u2otme8nrhv7n7ndv6af.apps.googleusercontent.com",
       "forceCodeForRefreshToken": true
     }
   }
