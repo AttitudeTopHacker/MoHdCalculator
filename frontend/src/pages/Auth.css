@@ -95,15 +95,18 @@
 
 /* Floating Auth Header / Navbar */
 .auth-header {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 60px;
+  padding: 18px 60px;
   z-index: 100;
+  background: rgba(13, 13, 13, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(46, 230, 197, 0.10);
   pointer-events: auto;
 }
 
@@ -145,8 +148,15 @@
 }
 
 @media (max-width: 600px) {
+  .auth-page {
+    padding: 90px 16px 30px;
+  }
   .auth-header {
-    padding: 16px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 20px;
   }
   .auth-logo {
     font-size: 1.1rem;
