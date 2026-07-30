@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { getLengthBreadthBreakdown, getBighaBreakdown } from '../../utils/localCalculator';
+import { getLengthBreadthBreakdown, getBighaBreakdown, getGattaInch, getBighaPerAcre } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
+import CalculatorSettings from '../../components/CalculatorSettings';
 import './Tools.css';
 
 export default function RectangleArea() {
@@ -25,20 +26,19 @@ export default function RectangleArea() {
   const [visualizerUnit, setVisualizerUnit] = useState('gatta'); // 'gatta' | 'foot' | 'meter' | 'inch'
   const [visualizerData, setVisualizerData] = useState(null);
 
-  // Conversion factors to Base Meter
-  const factors = {
-    gatta: 2.5146, // 99 inches * 0.0254
-    foot: 0.3048,
-    meter: 1.0,
-    inch: 0.0254
-  };
-
   const convertUnit = (val, from, to) => {
     const num = parseFloat(val);
     if (isNaN(num)) return 0;
+    const gattaFactor = getGattaInch() * 0.0254;
+    const localFactors = {
+      gatta: gattaFactor,
+      foot: 0.3048,
+      meter: 1.0,
+      inch: 0.0254
+    };
     // Convert to meters, then to target unit
-    const meters = num * factors[from];
-    return meters / factors[to];
+    const meters = num * localFactors[from];
+    return meters / localFactors[to];
   };
 
   const handleCalculate = async (e) => {
@@ -181,13 +181,16 @@ export default function RectangleArea() {
           </>
         )}
 
-        {/* Banner from decompiled Android String: 1 Acres = 6.399 Bigha */}
+        {/* Banner from decompiled Android String: 1 Acres = Bigha per Acre */}
         <div className="formula-box" style={{ marginTop: '0', marginBottom: '24px', background: 'var(--teal-dim)', borderColor: 'var(--teal)' }}>
           <div style={{ fontWeight: '700', color: 'var(--teal)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>💡 Reference Scale:</span>
-            <span style={{ color: 'var(--text-primary)' }}>1 Acre = 6.399 Bigha</span>
+            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {getBighaPerAcre()} Bigha</span>
           </div>
         </div>
+
+        {/* Global Settings Panel */}
+        <CalculatorSettings onSettingsChange={() => { setBreakdown(null); setVisualizerData(null); }} />
 
         <div className="glass-card">
           {/* Mode Switcher Tabs */}
@@ -243,7 +246,7 @@ export default function RectangleArea() {
                       onChange={() => { setCalculatorUnit('gatta'); setBreakdown(null); }}
                       style={{ accentColor: 'var(--teal)' }}
                     />
-                    Gatta(99inch)
+                    Gatta({getGattaInch()}inch)
                   </label>
 
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>

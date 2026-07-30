@@ -1,26 +1,44 @@
 // ── Client-Side Calculations Utility ──────────────────────────────────────────
 // Mirrors Java backend AreaCalculationService for instant offline calculations.
+// Supports dynamic scaling via localStorage variables (user configurable).
 
-const AREA_FACTORS = {
-  "Square Metre": 1.0,
-  "Square Kilometre": 1000000.0,
-  "Square Centimetre": 0.0001,
-  "Square Millimetre": 0.000001,
-  "Square Feet": 0.09290304,
-  "Square Inch": 0.00064516,
-  "Square Yard": 0.83612736,
-  "Square Mile": 2589988.11,
-  "Acre": 4046.8564224,
-  "Hectare": 10000.0,
-  "Bigha": 632.3213660000052,
-  "Biswa": 31.61606830000026,
-  "Biswansi": 1.580803415000013
+export const getGattaInch = () => {
+  const val = localStorage.getItem('ac_gatta_inch');
+  return val ? parseFloat(val) : 99.0;
+};
+
+export const getBighaPerAcre = () => {
+  const val = localStorage.getItem('ac_bigha_per_acre');
+  return val ? parseFloat(val) : 6.399;
+};
+
+const getAreaFactors = () => {
+  const bighaPerAcre = getBighaPerAcre();
+  // 1 Acre = 4046.8564224 m2. Bigha factor = Acre / BighaPerAcre
+  const bighaFactor = 4046.8564224 / bighaPerAcre;
+  
+  return {
+    "Square Metre": 1.0,
+    "Square Kilometre": 1000000.0,
+    "Square Centimetre": 0.0001,
+    "Square Millimetre": 0.000001,
+    "Square Feet": 0.09290304,
+    "Square Inch": 0.00064516,
+    "Square Yard": 0.83612736,
+    "Square Mile": 2589988.11,
+    "Acre": 4046.8564224,
+    "Hectare": 10000.0,
+    "Bigha": bighaFactor,
+    "Biswa": bighaFactor / 20.0,
+    "Biswansi": bighaFactor / 400.0
+  };
 };
 
 // ── Area conversions ──────────────────────────────────────────────────────────
 export const convertArea = (value, fromUnit, toUnit) => {
-  const fromFactor = AREA_FACTORS[fromUnit];
-  const toFactor = AREA_FACTORS[toUnit];
+  const factors = getAreaFactors();
+  const fromFactor = factors[fromUnit];
+  const toFactor = factors[toUnit];
   if (fromFactor === undefined || toFactor === undefined) {
     throw new Error(`Unknown area unit: ${fromUnit} or ${toUnit}`);
   }
@@ -42,25 +60,28 @@ export const calculateTriangleArea = (a, b, c) => {
 
 // ── Bigha / Biswa / Biswansi Breakdown ────────────────────────────────────────
 export const getBighaBreakdown = (areaInSqMetres) => {
-  const bighaTotal = areaInSqMetres / AREA_FACTORS["Bigha"];
+  const factors = getAreaFactors();
+  const bighaTotal = areaInSqMetres / factors["Bigha"];
   const bigha = Math.floor(Math.abs(bighaTotal)) * Math.sign(bighaTotal);
 
-  const remainderInSqM = (Math.abs(bighaTotal) - Math.abs(bigha)) * AREA_FACTORS["Bigha"];
-  const biswaTotal = remainderInSqM / AREA_FACTORS["Biswa"];
+  const remainderInSqM = (Math.abs(bighaTotal) - Math.abs(bigha)) * factors["Bigha"];
+  const biswaTotal = remainderInSqM / factors["Biswa"];
   const biswa = Math.floor(Math.abs(biswaTotal)) * Math.sign(biswaTotal);
 
-  const remainderInSqM2 = (Math.abs(biswaTotal) - Math.abs(biswa)) * AREA_FACTORS["Biswa"];
-  const biswansi = Math.floor(remainderInSqM2 / AREA_FACTORS["Biswansi"]);
+  const remainderInSqM2 = (Math.abs(biswaTotal) - Math.abs(biswa)) * factors["Biswa"];
+  const biswansi = Math.floor(remainderInSqM2 / factors["Biswansi"]);
 
   return { bigha, biswa, biswansi };
 };
 
 // ── Length × Breadth Mixed-Unit Breakdown (Rectangle) ──────────────────────────
 export const getLengthBreadthBreakdown = (length, breadth) => {
-  const area = length * breadth;
+  const area = length * breadth; // area in sq gatta
+  const b = getBighaPerAcre();
   
-  const part1 = Math.floor(area / 2559.9997975712663);
-  const rem1 = area % 2559.9997975712663;
+  // 1 Acre = BighaPerAcre * 400 sq gatta. e.g. 6.4 * 400 = 2560 sq gatta
+  const part1 = Math.floor(area / (b * 400.0));
+  const rem1 = area % (b * 400.0);
 
   const part2 = Math.floor(rem1 / 400.0);
   const rem2 = rem1 % 400.0;
@@ -74,7 +95,7 @@ export const getLengthBreadthBreakdown = (length, breadth) => {
 // ── Gatta length conversions ──────────────────────────────────────────────────
 const lengthToInch = (value, unit) => {
   const u = unit.toLowerCase().trim();
-  if (u === 'gatta') return value * 99.0;
+  if (u === 'gatta') return value * getGattaInch();
   if (u === 'foot' || u === 'feet') return value * 12.0;
   if (u === 'meter' || u === 'metre') return value * 39.37007874;
   if (u === 'inch' || u === 'inches') return value;
@@ -83,7 +104,7 @@ const lengthToInch = (value, unit) => {
 
 const inchToUnit = (inches, unit) => {
   const u = unit.toLowerCase().trim();
-  if (u === 'gatta') return inches / 99.0;
+  if (u === 'gatta') return inches / getGattaInch();
   if (u === 'foot' || u === 'feet') return inches / 12.0;
   if (u === 'meter' || u === 'metre') return inches * 0.0254;
   if (u === 'inch' || u === 'inches') return inches;
