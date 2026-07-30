@@ -1,0 +1,167 @@
+/* ── CalculatorSettings Styles ─────────────────────────────────────────── */
+
+.calc-settings-container {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.calc-settings-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all 0.25s;
+}
+
+.calc-settings-toggle:hover {
+  background: rgba(46, 230, 197, 0.04);
+  border-color: rgba(46, 230, 197, 0.2);
+  color: var(--text-primary);
+}
+
+.calc-settings-toggle.active {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: rgba(46, 230, 197, 0.06);
+  border-color: rgba(46, 230, 197, 0.35);
+  color: var(--teal);
+}
+
+.toggle-arrow {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.calc-settings-panel {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  border-color: rgba(46, 230, 197, 0.25) !important;
+  background: rgba(10, 15, 30, 0.9) !important;
+  padding: 20px 24px !important;
+  animation: slideDownPanel 0.25s ease-out;
+}
+
+@keyframes slideDownPanel {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.settings-row-checkbox {
+  margin-bottom: 18px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+
+.settings-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  transition: opacity 0.25s;
+}
+
+.settings-inputs-grid.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.settings-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-input);
+  padding: 0 12px;
+  height: 44px;
+}
+
+.settings-input-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.settings-unit {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.settings-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.current-scale-summary {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.current-scale-summary strong {
+  color: var(--teal);
+}
+
+.settings-reset-btn {
+  background: rgba(255, 78, 161, 0.1);
+  border: 1px solid rgba(255, 78, 161, 0.25);
+  color: var(--magenta);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.settings-reset-btn:hover {
+  background: rgba(255, 78, 161, 0.18);
+  border-color: rgba(255, 78, 161, 0.4);
+}
+
+@media (max-width: 480px) {
+  .settings-inputs-grid {
+    grid-template-columns: 1fr;
+  }
+}

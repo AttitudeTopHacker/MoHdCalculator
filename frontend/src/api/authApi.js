@@ -118,6 +118,9 @@ export const authApi = {
 
   checkHealth: () =>
     api.get('/public/health'),
+
+  googleNative: (idToken) =>
+    api.post('/auth/google-native', { idToken }),
 };
 
 // ── Google OAuth2 ─────────────────────────────────────────────────────────────

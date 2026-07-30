@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import java.util.Map;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -300,5 +302,73 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         return UserResponse.from(user);
+    }
+
+    // ── Native Google Sign-In ────────────────────────────────────────────────
+    @Transactional
+    public AuthResponse loginWithGoogleNative(NativeGoogleLoginRequest request) {
+        String tokenUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + request.getIdToken();
+        RestTemplate restTemplate = new RestTemplate();
+        
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.getForObject(tokenUrl, Map.class);
+            if (response == null || !response.containsKey("email")) {
+                throw new InvalidCredentialsException("Invalid Google ID token.");
+            }
+            
+            String email = ((String) response.get("email")).toLowerCase().trim();
+            String fullName = (String) response.get("name");
+            String pictureUrl = (String) response.get("picture");
+            
+            // Check if user is suspended
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null && user.isSuspended()) {
+                throw new InvalidCredentialsException("Your account is suspended. Please contact support.");
+            }
+            
+            boolean isAdmin = checkIsAdmin(email);
+            
+            if (user == null) {
+                // New Google user
+                user = User.builder()
+                        .email(email)
+                        .fullName(fullName)
+                        .provider(Provider.GOOGLE)
+                        .pictureUrl(pictureUrl)
+                        .isVerified(true)
+                        .isProfileSetup(false) // Will force password setup on mobile app
+                        .isAdmin(isAdmin)
+                        .build();
+                userRepository.save(user);
+            } else if (user.getProvider() == Provider.LOCAL) {
+                // Link local account to Google provider
+                user.setVerified(true);
+                user.setProfileSetup(true);
+                user.setAdmin(isAdmin);
+                if (pictureUrl != null) user.setPictureUrl(pictureUrl);
+                userRepository.save(user);
+            } else {
+                // Returning Google user - update picture/admin if changed
+                boolean updated = false;
+                if (pictureUrl != null && !pictureUrl.equals(user.getPictureUrl())) {
+                    user.setPictureUrl(pictureUrl);
+                    updated = true;
+                }
+                if (user.isAdmin() != isAdmin) {
+                    user.setAdmin(isAdmin);
+                    updated = true;
+                }
+                if (updated) {
+                    userRepository.save(user);
+                }
+            }
+            
+            String jwt = jwtUtil.generateToken(user.getEmail());
+            return new AuthResponse(jwt, UserResponse.from(user));
+            
+        } catch (Exception e) {
+            throw new InvalidCredentialsException("Google Native login failed: " + e.getMessage());
+        }
     }
 }

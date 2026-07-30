@@ -64,6 +64,17 @@ public class AuthController {
     }
 
     /**
+     * POST /api/v1/auth/google-native
+     * Authenticates native Google ID tokens and returns JWT.
+     */
+    @PostMapping("/google-native")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleNative(
+            @Valid @RequestBody NativeGoogleLoginRequest request) {
+        AuthResponse response = authService.loginWithGoogleNative(request);
+        return ResponseEntity.ok(ApiResponse.success("Google Sign-In successful.", response));
+    }
+
+    /**
      * POST /api/v1/auth/forgot-password
      * Sends a 6-digit password reset OTP to the provided email.
      * Always returns 200 (prevents email enumeration).

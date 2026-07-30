@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { convertLength } from '../../utils/localCalculator';
+import { convertLength, getGattaInch } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
+import CalculatorSettings from '../../components/CalculatorSettings';
 import './Tools.css';
 
 const LENGTH_UNITS = {
@@ -92,9 +93,12 @@ export default function LengthConvert() {
           Convert length measurements including standard surveying units like Gatta (99 inches rope/chain measurement), Meters, Feet, and Inches.
         </p>
 
+        {/* Global Settings Panel */}
+        <CalculatorSettings onSettingsChange={() => { setResult(null); setQuickConversions(null); }} />
+
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span className="status-badge functional">Backend REST Connected</span>
+            <span className="status-badge functional">⚡ Local Calculation</span>
           </div>
 
           <form onSubmit={handleConvert}>

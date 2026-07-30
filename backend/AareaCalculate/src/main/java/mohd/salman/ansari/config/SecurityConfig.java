@@ -65,6 +65,7 @@ public class SecurityConfig {
                     "/api/v1/auth/verify-signup",
                     "/api/v1/auth/resend-signup-otp",
                     "/api/v1/auth/login",
+                    "/api/v1/auth/google-native",
                     "/api/v1/auth/forgot-password",
                     "/api/v1/auth/reset-password",
                     "/login/oauth2/**",
@@ -100,6 +101,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:*",
+            "http://localhost",
+            "capacitor://localhost",
             "http://127.0.0.1:*",
             "http://10.*",
             "http://192.168.*",

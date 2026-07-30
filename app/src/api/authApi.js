@@ -118,26 +118,16 @@ export const authApi = {
 
   checkHealth: () =>
     api.get('/public/health'),
-};
 
-import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
+  googleNative: (idToken) =>
+    api.post('/auth/google-native', { idToken }),
+};
 
 // ── Google OAuth2 ─────────────────────────────────────────────────────────────
 // Redirects browser to Spring Security's OAuth2 authorization page.
-export const triggerGoogleLogin = async () => {
+export const triggerGoogleLogin = () => {
   const backendBase = BASE_URL.replace('/api/v1', '');
-  const isNative = Capacitor.isNativePlatform();
-
-  if (isNative) {
-    // Open in secure Custom Tab (bypasses Google disallowed_useragent webview blocker)
-    await Browser.open({
-      url: `${backendBase}/login/oauth2/google?platform=mobile`,
-      windowName: '_self'
-    });
-  } else {
-    window.location.href = `${backendBase}/login/oauth2/google`;
-  }
+  window.location.href = `${backendBase}/login/oauth2/google`;
 };
 
 export default api;

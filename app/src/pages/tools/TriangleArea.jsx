@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateTriangleArea, getBighaBreakdown } from '../../utils/localCalculator';
+import { calculateTriangleArea, getBighaBreakdown, getGattaInch, getBighaPerAcre } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
+import CalculatorSettings from '../../components/CalculatorSettings';
 import './Tools.css';
 
 export default function TriangleArea() {
@@ -15,13 +16,15 @@ export default function TriangleArea() {
   const [showInstruction, setShowInstruction] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bighaScale, setBighaScale] = useState(getBighaPerAcre());
+  const [gattaScale, setGattaScale] = useState(getGattaInch());
 
   const convertToMeters = (val, currentUnit) => {
     const num = parseFloat(val);
     if (isNaN(num)) return 0;
     if (currentUnit === 'gatta') {
-      // 1 Gatta = 99 inches = 99 * 0.0254 meters = 2.5146 meters
-      return num * 2.5146;
+      // 1 Gatta = custom GattaInch * 0.0254 meters
+      return num * (getGattaInch() * 0.0254);
     }
     if (currentUnit === 'foot') {
       // 1 Foot = 0.3048 meters
@@ -118,13 +121,22 @@ export default function TriangleArea() {
         <div className="tool-welcome-badge">Shape Calculator</div>
         <h1 className="tool-title">Area of Triangle</h1>
         
-        {/* Banner from decompiled Android String: 1 Acres = 6.399 Bigha */}
+        {/* Banner from decompiled Android String: 1 Acres = Bigha per Acre */}
         <div className="formula-box" style={{ marginTop: '0', marginBottom: '24px', background: 'var(--teal-dim)', borderColor: 'var(--teal)' }}>
           <div style={{ fontWeight: '700', color: 'var(--teal)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>💡 Reference Scale:</span>
-            <span style={{ color: 'var(--text-primary)' }}>1 Acre = 6.399 Bigha</span>
+            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {bighaScale} Bigha</span>
           </div>
         </div>
+
+        {/* Global Settings Panel */}
+        <CalculatorSettings 
+          onSettingsChange={(newScale) => {
+            setBighaScale(newScale.bighaPerAcre);
+            setGattaScale(newScale.gattaInch);
+            setResult(null);
+          }} 
+        />
 
         <div className="glass-card">
           <div className="triangle-header-container">
@@ -141,7 +153,7 @@ export default function TriangleArea() {
                   onChange={() => { setUnit('gatta'); setResult(null); }}
                   style={{ accentColor: 'var(--teal)' }}
                 />
-                Gatta (99inch)
+                Gatta ({gattaScale}inch)
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>

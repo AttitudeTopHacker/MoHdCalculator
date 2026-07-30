@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { convertArea } from '../../utils/localCalculator';
+import { convertArea, getBighaPerAcre } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
+import CalculatorSettings from '../../components/CalculatorSettings';
 import './Tools.css';
 
 const UNITS = {
@@ -117,12 +118,15 @@ export default function AreaConvert() {
         <div className="tool-welcome-badge">Convert Tool</div>
         <h1 className="tool-title">Area Convert</h1>
         <p className="tool-desc">
-          Convert seamlessly between international and regional area units. Calculations are processed through the Spring Boot unit conversion engine.
+          Convert seamlessly between international and regional area units. Calculations are instant and processed locally in the browser.
         </p>
+
+        {/* Global Settings Panel */}
+        <CalculatorSettings onSettingsChange={() => { setResult(null); setQuickConversions(null); }} />
 
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span className="status-badge functional">Backend REST Connected</span>
+            <span className="status-badge functional">⚡ Local Calculation</span>
           </div>
           <form onSubmit={handleConvert}>
             <div className="tool-form-grid-three">

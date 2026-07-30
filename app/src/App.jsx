@@ -1,7 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
-import { App as CapApp } from '@capacitor/app';
-import { Browser } from '@capacitor/browser';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Toast from './components/Toast';
 import { TOAST_EVENT } from './utils/toast';
@@ -121,42 +119,9 @@ function AdminRoute({ children }) {
   return children;
 }
 
-function AppDeepLinkHandler() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const setupListener = async () => {
-      await CapApp.addListener('appUrlOpen', (event) => {
-        const url = event.url;
-        if (url.startsWith('com.msmmovin.areacalculator://')) {
-          // Close Chrome Custom Tab if open
-          Browser.close().catch(() => {});
-          
-          // Extract route path and search params
-          const pathPart = url.replace('com.msmmovin.areacalculator://', '');
-          const [route, search] = pathPart.split('?');
-          
-          if (route === 'oauth2/callback') {
-            navigate(`/${route}?${search || ''}`, { replace: true });
-          }
-        }
-      });
-    };
-
-    setupListener();
-
-    return () => {
-      CapApp.removeAllListeners();
-    };
-  }, [navigate]);
-
-  return null;
-}
-
 export default function App() {
   return (
     <BrowserRouter>
-      <AppDeepLinkHandler />
       <AuthProvider>
         {/* Global toast — listens to all axios errors + showToast() calls */}
         <GlobalToastListener />

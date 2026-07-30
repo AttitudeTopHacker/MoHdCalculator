@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import useWakeup from '../utils/useWakeup';
 import './Splash.css';
 
 export default function Splash() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [exiting, setExiting] = useState(false);
+
+  // Silently wake up Render backend the moment app opens
+  useWakeup();
 
   useEffect(() => {
     const exitTimer = setTimeout(() => {

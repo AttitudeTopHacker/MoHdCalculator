@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { getBighaBreakdown, convertArea } from '../../utils/localCalculator';
+import { getBighaBreakdown, convertArea, getBighaPerAcre } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
+import CalculatorSettings from '../../components/CalculatorSettings';
 import './Tools.css';
 
 export default function ConvertSqMt() {
@@ -74,12 +75,15 @@ export default function ConvertSqMt() {
         <div className="tool-welcome-badge">Convert Tool</div>
         <h1 className="tool-title">SQ_MT Convert To Easy</h1>
         <p className="tool-desc">
-          Convert Square Meters (m²) into the traditional regional land divisions (Bigha, Biswa, Biswansi) and standard international units via Spring Boot calculations.
+          Convert Square Meters (m²) into the traditional regional land divisions (Bigha, Biswa, Biswansi) and standard international units — all calculated instantly in the browser.
         </p>
+
+        {/* Global Settings Panel */}
+        <CalculatorSettings onSettingsChange={() => { setBreakdown(null); setEquivalents(null); }} />
 
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span className="status-badge functional">Backend REST Connected</span>
+            <span className="status-badge functional">⚡ Local Calculation</span>
           </div>
 
           <form onSubmit={handleCalculate}>

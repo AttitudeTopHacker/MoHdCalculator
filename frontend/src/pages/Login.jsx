@@ -11,6 +11,9 @@ import { authApi, triggerGoogleLogin } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
 export default function Login() {
   const navigate = useNavigate();
   const { saveSession } = useAuth();
@@ -22,13 +25,36 @@ export default function Login() {
   const [wakingUp, setWakingUp] = useState(false);
 
   const handleGoogleLogin = async () => {
-    setWakingUp(true);
-    try {
-      await authApi.checkHealth();
-    } catch (err) {
-      console.warn("Backend health check failed or timed out", err);
+    const isNative = Capacitor.isNativePlatform();
+
+    if (isNative) {
+      setLoading(true);
+      try {
+        GoogleAuth.initialize();
+        const googleUser = await GoogleAuth.signIn();
+        const idToken = googleUser.authentication.idToken;
+        if (!idToken) throw new Error("Google authentication didn't return an ID token.");
+
+        const res = await authApi.googleNative(idToken);
+        const { token, user } = res.data.data;
+        saveSession(token, user);
+        navigate('/dashboard');
+      } catch (err) {
+        console.error("Native Google login failed", err);
+        const errMsg = err.response?.data?.message || err.message || 'Google Sign-In failed.';
+        setToast({ type: 'error', message: errMsg });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setWakingUp(true);
+      try {
+        await authApi.checkHealth();
+      } catch (err) {
+        console.warn("Backend health check failed or timed out", err);
+      }
+      triggerGoogleLogin();
     }
-    triggerGoogleLogin();
   };
 
   const handleChange = (e) => {
