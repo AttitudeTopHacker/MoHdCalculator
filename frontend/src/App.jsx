@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Toast from './components/Toast';
+import { TOAST_EVENT } from './utils/toast';
 import Splash from './pages/Splash';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -21,6 +24,33 @@ import RectangleArea from './pages/tools/RectangleArea';
 import AreaConvert from './pages/tools/AreaConvert';
 import ConvertSqMt from './pages/tools/ConvertSqMt';
 import LengthConvert from './pages/tools/LengthConvert';
+
+// ── Global Toast Listener ─────────────────────────────────────────────────────
+// Listens to 'ac:toast' CustomEvents fired by axios interceptor or showToast()
+// and renders the Toast component at the root level for the whole app.
+function GlobalToastListener() {
+  const [toast, setToast] = useState(null);
+
+  const handleToast = useCallback((e) => {
+    setToast(e.detail);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener(TOAST_EVENT, handleToast);
+    return () => window.removeEventListener(TOAST_EVENT, handleToast);
+  }, [handleToast]);
+
+  if (!toast) return null;
+
+  return (
+    <Toast
+      message={toast.message}
+      type={toast.type}
+      duration={toast.duration}
+      onClose={() => setToast(null)}
+    />
+  );
+}
 
 /**
  * ProtectedRoute:
@@ -93,6 +123,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        {/* Global toast — listens to all axios errors + showToast() calls */}
+        <GlobalToastListener />
+
         <Routes>
           {/* Splash Screen */}
           <Route path="/" element={<Splash />} />
@@ -132,3 +165,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
