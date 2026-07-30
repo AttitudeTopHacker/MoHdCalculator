@@ -50,7 +50,7 @@ export const getBighaBreakdown = (areaInSqMetres) => {
   const biswa = Math.floor(Math.abs(biswaTotal)) * Math.sign(biswaTotal);
 
   const remainderInSqM2 = (Math.abs(biswaTotal) - Math.abs(biswa)) * AREA_FACTORS["Biswa"];
-  const biswansi = Math.round(remainderInSqM2 / AREA_FACTORS["Biswansi"]);
+  const biswansi = Math.floor(remainderInSqM2 / AREA_FACTORS["Biswansi"]);
 
   return { bigha, biswa, biswansi };
 };
@@ -66,7 +66,7 @@ export const getLengthBreadthBreakdown = (length, breadth) => {
   const rem2 = rem1 % 400.0;
 
   const part3 = Math.floor(rem2 / 20.0);
-  const part4 = Math.round(rem2 % 20.0);
+  const part4 = Math.floor(rem2 % 20.0);
 
   return { part1, part2, part3, part4 };
 };

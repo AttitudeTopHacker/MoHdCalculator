@@ -94,7 +94,7 @@ export default function LengthConvert() {
 
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span className="status-badge functional">Backend REST Connected</span>
+            <span className="status-badge functional">⚡ Local Calculation</span>
           </div>
 
           <form onSubmit={handleConvert}>
