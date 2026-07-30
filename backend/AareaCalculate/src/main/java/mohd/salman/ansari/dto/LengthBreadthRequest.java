@@ -17,4 +17,7 @@ public class LengthBreadthRequest {
     @NotNull(message = "breadth cannot be null")
     @PositiveOrZero(message = "breadth must be positive or zero")
     private Double breadth;
+
+    private Double bighaPerAcre;
+    private Double gattaInch;
 }

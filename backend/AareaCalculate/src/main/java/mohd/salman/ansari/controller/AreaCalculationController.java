@@ -21,7 +21,7 @@ public class AreaCalculationController {
             @Valid @RequestBody ConvertRequest request) {
         try {
             double result = calculationService.convertArea(
-                    request.getValue(), request.getFromUnit(), request.getToUnit());
+                    request.getValue(), request.getFromUnit(), request.getToUnit(), request.getBighaPerAcre());
             return ResponseEntity.ok(ApiResponse.success(
                     "Conversion successful", new ConvertResponse(result)));
         } catch (IllegalArgumentException e) {
@@ -33,6 +33,7 @@ public class AreaCalculationController {
     public ResponseEntity<ApiResponse<TriangleAreaResponse>> triangleArea(
             @Valid @RequestBody TriangleAreaRequest request) {
         try {
+            // Under Heron's formula unit conversion is performed by client beforehand
             double area = calculationService.triangleArea(
                     request.getSideA(), request.getSideB(), request.getSideC());
             return ResponseEntity.ok(ApiResponse.success(
@@ -47,7 +48,7 @@ public class AreaCalculationController {
             @Valid @RequestBody BighaBreakdownRequest request) {
         try {
             List<Integer> breakdown = calculationService.bighaBiswaBiswansiBreakdown(
-                    request.getAreaInSqMetres());
+                    request.getAreaInSqMetres(), request.getBighaPerAcre());
             BighaBreakdownResponse response = new BighaBreakdownResponse(
                     breakdown.get(0), breakdown.get(1), breakdown.get(2));
             return ResponseEntity.ok(ApiResponse.success(
@@ -62,7 +63,7 @@ public class AreaCalculationController {
             @Valid @RequestBody LengthBreadthRequest request) {
         try {
             int[] breakdown = calculationService.lengthBreadthBreakdown(
-                    request.getLength(), request.getBreadth());
+                    request.getLength(), request.getBreadth(), request.getBighaPerAcre());
             LengthBreadthResponse response = new LengthBreadthResponse(
                     breakdown[0], breakdown[1], breakdown[2], breakdown[3]);
             return ResponseEntity.ok(ApiResponse.success(
@@ -77,7 +78,7 @@ public class AreaCalculationController {
             @Valid @RequestBody LengthConvertRequest request) {
         try {
             double result = calculationService.convertLength(
-                    request.getValue(), request.getFromUnit(), request.getToUnit());
+                    request.getValue(), request.getFromUnit(), request.getToUnit(), request.getGattaInch());
             return ResponseEntity.ok(ApiResponse.success(
                     "Conversion successful", new LengthConvertResponse(result)));
         } catch (IllegalArgumentException e) {

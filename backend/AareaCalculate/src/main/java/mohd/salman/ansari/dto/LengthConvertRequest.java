@@ -17,4 +17,6 @@ public class LengthConvertRequest {
 
     @NotNull(message = "toUnit cannot be null")
     private String toUnit;
+
+    private Double gattaInch;
 }

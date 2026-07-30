@@ -20,26 +20,51 @@ public class AreaCalculationService {
         Map.entry("Square Mile", 2589988.11),
         Map.entry("Acre", 4046.8564224),
         Map.entry("Hectare", 10000.0),
-        Map.entry("Bigha", 632.3213660000052),
-        Map.entry("Biswa", 31.61606830000026),
-        Map.entry("Biswansi", 1.580803415000013)
+        Map.entry("Bigha", 632.420131645), // Default to 4046.8564224 / 6.399
+        Map.entry("Biswa", 31.621006582),  // Bigha / 20
+        Map.entry("Biswansi", 1.581050329)  // Bigha / 400
     );
 
-    public double toBaseUnit(double value, String unit) {
+    public double getFactor(String unit, Double bighaPerAcre) {
+        if (bighaPerAcre != null) {
+            if (unit.equals("Bigha")) {
+                return 4046.8564224 / bighaPerAcre;
+            }
+            if (unit.equals("Biswa")) {
+                return (4046.8564224 / bighaPerAcre) / 20.0;
+            }
+            if (unit.equals("Biswansi")) {
+                return (4046.8564224 / bighaPerAcre) / 400.0;
+            }
+        }
         Double factor = FACTOR.get(unit);
         if (factor == null) throw new IllegalArgumentException("Unknown unit: " + unit);
-        return value * factor;
+        return factor;
+    }
+
+    public double toBaseUnit(double value, String unit) {
+        return toBaseUnit(value, unit, null);
+    }
+
+    public double toBaseUnit(double value, String unit, Double bighaPerAcre) {
+        return value * getFactor(unit, bighaPerAcre);
     }
 
     public double fromBaseUnit(double valueInSqMetres, String unit) {
-        Double factor = FACTOR.get(unit);
-        if (factor == null) throw new IllegalArgumentException("Unknown unit: " + unit);
-        return valueInSqMetres / factor;
+        return fromBaseUnit(valueInSqMetres, unit, null);
+    }
+
+    public double fromBaseUnit(double valueInSqMetres, String unit, Double bighaPerAcre) {
+        return valueInSqMetres / getFactor(unit, bighaPerAcre);
     }
 
     public double convertArea(double value, String fromUnit, String toUnit) {
-        double sqMetres = toBaseUnit(value, fromUnit);
-        return fromBaseUnit(sqMetres, toUnit);
+        return convertArea(value, fromUnit, toUnit, null);
+    }
+
+    public double convertArea(double value, String fromUnit, String toUnit, Double bighaPerAcre) {
+        double sqMetres = toBaseUnit(value, fromUnit, bighaPerAcre);
+        return fromBaseUnit(sqMetres, toUnit, bighaPerAcre);
     }
 
     // ── Module 2 — Heron's Formula for Triangle Area ───────────────────────
@@ -56,19 +81,23 @@ public class AreaCalculationService {
 
     // ── Module 3 — Bigha / Biswa / Biswansi Breakdown ──────────────────────
     public List<Integer> bighaBiswaBiswansiBreakdown(double areaInSqMetres) {
+        return bighaBiswaBiswansiBreakdown(areaInSqMetres, null);
+    }
+
+    public List<Integer> bighaBiswaBiswansiBreakdown(double areaInSqMetres, Double bighaPerAcre) {
         List<Integer> result = new ArrayList<>();
 
-        double bighaTotal = fromBaseUnit(areaInSqMetres, "Bigha");
+        double bighaTotal = fromBaseUnit(areaInSqMetres, "Bigha", bighaPerAcre);
         int bigha = (int) bighaTotal;
         result.add(bigha);
 
-        double remainderInSqM = toBaseUnit(Math.abs(bighaTotal) - Math.abs(bigha), "Bigha");
-        double biswaTotal = fromBaseUnit(remainderInSqM, "Biswa");
+        double remainderInSqM = toBaseUnit(Math.abs(bighaTotal) - Math.abs(bigha), "Bigha", bighaPerAcre);
+        double biswaTotal = fromBaseUnit(remainderInSqM, "Biswa", bighaPerAcre);
         int biswa = (int) biswaTotal;
         result.add(biswa);
 
-        double remainderInSqM2 = toBaseUnit(Math.abs(biswaTotal) - Math.abs(biswa), "Biswa");
-        int biswansi = (int) fromBaseUnit(remainderInSqM2, "Biswansi");
+        double remainderInSqM2 = toBaseUnit(Math.abs(biswaTotal) - Math.abs(biswa), "Biswa", bighaPerAcre);
+        int biswansi = (int) fromBaseUnit(remainderInSqM2, "Biswansi", bighaPerAcre);
         result.add(biswansi);
 
         return result; // [bigha, biswa, biswansi]
@@ -76,10 +105,16 @@ public class AreaCalculationService {
 
     // ── Module 4 — Length × Breadth Mixed-Unit Breakdown ────────────────────
     public int[] lengthBreadthBreakdown(double length, double breadth) {
-        double area = length * breadth;
+        return lengthBreadthBreakdown(length, breadth, null);
+    }
 
-        int part1 = (int) (area / 2559.9997975712663);
-        double rem1 = area % 2559.9997975712663;
+    public int[] lengthBreadthBreakdown(double length, double breadth, Double bighaPerAcre) {
+        double area = length * breadth; // area in sq gatta
+        double b = bighaPerAcre != null ? bighaPerAcre : 6.399;
+        double divisor = b * 400.0;
+
+        int part1 = (int) (area / divisor);
+        double rem1 = area % divisor;
 
         int part2 = (int) (rem1 / 400.0);
         double rem2 = rem1 % 400.0;
@@ -106,6 +141,10 @@ public class AreaCalculationService {
     public double meterToFoot(double meter) { return meter * 3.280839895; }
 
     public double convertLength(double value, String fromUnit, String toUnit) {
+        return convertLength(value, fromUnit, toUnit, null);
+    }
+
+    public double convertLength(double value, String fromUnit, String toUnit, Double gattaInch) {
         // Normalize input string comparison
         String from = fromUnit.toLowerCase().trim();
         String to = toUnit.toLowerCase().trim();
@@ -116,9 +155,11 @@ public class AreaCalculationService {
 
         // Step 1: Convert input to inches (base unit for length logic)
         double inches;
+        double inchVal = gattaInch != null ? gattaInch : 99.0;
+
         switch (from) {
             case "gatta":
-                inches = gattaToInch(value);
+                inches = value * inchVal;
                 break;
             case "meter":
             case "metre":
@@ -133,13 +174,13 @@ public class AreaCalculationService {
                 inches = value;
                 break;
             default:
-                throw new IllegalArgumentException("Unknown length unit: " + fromUnit);
+                throw new IllegalArgumentException("Unknown length unit: " + from);
         }
 
         // Step 2: Convert from inches to target unit
         switch (to) {
             case "gatta":
-                return inchToGatta(inches);
+                return inches / inchVal;
             case "meter":
             case "metre":
                 return inchToMeter(inches);
@@ -150,7 +191,7 @@ public class AreaCalculationService {
             case "inches":
                 return inches;
             default:
-                throw new IllegalArgumentException("Unknown length unit: " + toUnit);
+                throw new IllegalArgumentException("Unknown length unit: " + to);
         }
     }
 }

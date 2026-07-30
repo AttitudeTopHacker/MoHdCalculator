@@ -21,4 +21,6 @@ public class TriangleAreaRequest {
     @NotNull(message = "sideC cannot be null")
     @Positive(message = "sideC must be positive")
     private Double sideC;
+
+    private Double gattaInch;
 }

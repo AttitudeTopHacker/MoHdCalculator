@@ -13,4 +13,6 @@ public class BighaBreakdownRequest {
     @NotNull(message = "areaInSqMetres cannot be null")
     @PositiveOrZero(message = "areaInSqMetres must be positive or zero")
     private Double areaInSqMetres;
+
+    private Double bighaPerAcre;
 }

@@ -17,4 +17,6 @@ public class ConvertRequest {
 
     @NotNull(message = "toUnit cannot be null")
     private String toUnit;
+
+    private Double bighaPerAcre;
 }
