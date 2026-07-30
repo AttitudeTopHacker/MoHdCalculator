@@ -33,6 +33,11 @@ export default function Signup() {
       setLoading(true);
       try {
         GoogleAuth.initialize();
+        try {
+          await GoogleAuth.signOut();
+        } catch (e) {
+          // Ignored if not signed in
+        }
         const googleUser = await GoogleAuth.signIn();
         const idToken = googleUser.authentication.idToken;
         if (!idToken) throw new Error("Google authentication didn't return an ID token.");
