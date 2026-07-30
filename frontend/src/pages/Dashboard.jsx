@@ -328,7 +328,7 @@ export default function Dashboard() {
           <div className="profile-avatar-container" ref={dropdownRef}>
             <div className="profile-avatar" onClick={() => setDropdownOpen(!dropdownOpen)}>
               {avatarPic
-                ? <img src={avatarPic} alt="profile" className="profile-avatar-img" />
+                ? <img src={avatarPic} alt="profile" className="profile-avatar-img" referrerPolicy="no-referrer" />
                 : initials
               }
             </div>
@@ -543,7 +543,7 @@ export default function Dashboard() {
                   {picPreview
                     ? <img src={picPreview} alt="preview" className="modal-avatar-img" />
                     : avatarPic
-                      ? <img src={avatarPic} alt="profile" className="modal-avatar-img" />
+                      ? <img src={avatarPic} alt="profile" className="modal-avatar-img" referrerPolicy="no-referrer" />
                       : <span className="modal-avatar-initials">{initials}</span>
                   }
                   <div className="modal-avatar-overlay">
