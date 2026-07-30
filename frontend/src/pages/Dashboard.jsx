@@ -7,6 +7,7 @@ import InputField from '../components/InputField';
 import PrimaryButton from '../components/PrimaryButton';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
+import useWakeup from '../utils/useWakeup';
 import './Dashboard.css';
 
 const TOOLS = [
@@ -95,6 +96,9 @@ const TOOLS = [
 export default function Dashboard() {
   const { user, logout, saveSession, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Silently wake up Render backend in background
+  useWakeup();
 
   // Dropdown & Modal States
   const [dropdownOpen, setDropdownOpen] = useState(false);

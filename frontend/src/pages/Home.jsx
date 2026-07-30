@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { adminApi } from '../api/adminApi';
 import WaveBackground from '../components/WaveBackground';
 import ConfirmModal from '../components/ConfirmModal';
+import useWakeup from '../utils/useWakeup';
 import './Home.css';
 
 const FEATURES = [
@@ -33,6 +34,9 @@ export default function Home() {
   const { isAuthenticated, logout } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
   const [team, setTeam] = useState([]);
+
+  // Silently wake up Render backend in background
+  useWakeup();
 
   useEffect(() => {
     adminApi.publicGetTeam()
