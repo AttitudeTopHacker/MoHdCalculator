@@ -1,0 +1,112 @@
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 8, 8, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: confirmFadeIn 0.2s ease-out;
+}
+
+.confirm-modal-card {
+  width: 90%;
+  max-width: 400px;
+  background: #101010;
+  border: 1px solid var(--teal);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  position: relative;
+}
+
+.confirm-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.confirm-modal-icon {
+  font-size: 2.2rem;
+}
+
+.confirm-modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--teal);
+  margin: 0;
+}
+
+.confirm-modal-message {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-btn-cancel {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  padding: 11px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-btn-cancel:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.confirm-btn-action {
+  flex: 1;
+  background: var(--teal);
+  border: 1px solid var(--teal);
+  color: #0D0D0D;
+  padding: 11px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-btn-action:hover {
+  background: transparent;
+  color: var(--teal);
+  box-shadow: 0 0 12px rgba(46, 230, 197, 0.35);
+}
+
+@keyframes confirmFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 450px) {
+  .confirm-modal-card {
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
+  .confirm-modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+}
