@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminApi } from '../api/adminApi';
-import WaveBackground from '../components/WaveBackground';
+import SlidingBackground from '../components/SlidingBackground';
 import ConfirmModal from '../components/ConfirmModal';
 import useWakeup from '../utils/useWakeup';
 import './Home.css';
@@ -33,14 +33,42 @@ const FEATURES = [
 export default function Home() {
   const { isAuthenticated, logout } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [team, setTeam] = useState([]);
+  const [team, setTeam] = useState([
+    {
+      id: 'default-1',
+      name: 'Salman Ansari',
+      email: 'salman.ansari@example.com',
+      about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
+      pictureUrl: ''
+    }
+  ]);
 
   // Silently wake up Render backend in background
   useWakeup();
 
+  // ── Typewriter cycling accent words ──
+  const ACCENT_WORDS = ['Triangles', 'Rectangles', 'Polygons', 'Land Plots', 'Any Shape'];
+  const [accentIdx, setAccentIdx] = useState(0);
+  const [fadeAnim, setFadeAnim] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFadeAnim(false);
+      setTimeout(() => {
+        setAccentIdx(i => (i + 1) % ACCENT_WORDS.length);
+        setFadeAnim(true);
+      }, 300);
+    }, 2400);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     adminApi.publicGetTeam()
-      .then((res) => setTeam(res.data.data))
+      .then((res) => {
+        if (res.data && res.data.data && res.data.data.length > 0) {
+          setTeam(res.data.data);
+        }
+      })
       .catch((err) => console.error("Error fetching team list:", err));
   }, []);
 
@@ -55,7 +83,7 @@ export default function Home() {
 
   return (
     <div className="home">
-      <WaveBackground />
+      <SlidingBackground />
 
       {/* ── Nav ─────────────────────────────────────────────── */}
       <header className="home-nav">
@@ -94,23 +122,36 @@ export default function Home() {
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="hero">
-        <div className="hero-badge">✦ Now in Phase 1</div>
+        <div className="hero-badge">✦ Instant · Secure · Cloud-Synced</div>
 
         <h1 className="hero-heading">
-          Calculate Areas
-          <br />
-          <span className="hero-accent">with Precision.</span>
+          Measure
+          <span
+            className="hero-accent"
+            style={{
+              opacity: fadeAnim ? 1 : 0,
+              transform: fadeAnim ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'opacity 0.3s ease, transform 0.3s ease',
+              display: 'block'
+            }}
+          >
+            {ACCENT_WORDS[accentIdx]}
+          </span>
+          <span className="hero-heading-sub">with Precision.</span>
         </h1>
 
         <p className="hero-desc">
-          A premium, full-stack area calculator with secure authentication,
-          Google sign-in, and cloud storage — built for engineers and builders.
+          The smartest land & area calculator — supports{' '}
+          <span className="hero-keyword">Bigha · Biswa · Gatta</span>,
+          maps, triangles, rectangles and more.{' '}
+          <span className="hero-keyword">Offline-first</span> calculations,{' '}
+          <span className="hero-keyword">Google sign-in</span> & cloud history.
         </p>
 
         <div className="hero-cta">
           {isAuthenticated ? (
             <Link to="/dashboard" className="cta-primary" id="hero-dashboard-btn">
-              Go to Dashboard
+              Open Dashboard →
             </Link>
           ) : (
             <>
@@ -127,16 +168,20 @@ export default function Home() {
         {/* Floating stat chips */}
         <div className="hero-stats">
           <div className="stat-chip">
-            <span className="stat-num">10+</span>
-            <span className="stat-label">Shape Types</span>
+            <span className="stat-num">⚡</span>
+            <span className="stat-label">Instant Results</span>
           </div>
           <div className="stat-chip">
             <span className="stat-num">🔐</span>
             <span className="stat-label">Secure Login</span>
           </div>
           <div className="stat-chip">
-            <span className="stat-num">☁</span>
-            <span className="stat-label">Cloud Synced</span>
+            <span className="stat-num">🗺️</span>
+            <span className="stat-label">Map Support</span>
+          </div>
+          <div className="stat-chip">
+            <span className="stat-num">🌾</span>
+            <span className="stat-label">Bigha / Biswa</span>
           </div>
         </div>
       </section>
@@ -212,6 +257,7 @@ export default function Home() {
           Built by <strong style={{ color: 'var(--teal)' }}>Salman Ansari</strong> · 2026
         </span>
         <div className="footer-links">
+          <Link to="/about" className="footer-link">About</Link>
           {isAuthenticated ? (
             <Link to="/dashboard" className="footer-link">Dashboard</Link>
           ) : (
