@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './CalculatorSettings.css';
 
 export default function CalculatorSettings({ onSettingsChange }) {
@@ -15,26 +15,51 @@ export default function CalculatorSettings({ onSettingsChange }) {
     return localStorage.getItem('ac_gatta_inch') || '99.0';
   });
 
-  // Keep state synced with localStorage
-  useEffect(() => {
-    localStorage.setItem('ac_settings_custom', String(enabled));
-    if (!enabled) {
-      // Revert to defaults if disabled
-      localStorage.setItem('ac_bigha_per_acre', '6.399');
-      localStorage.setItem('ac_gatta_inch', '99.0');
+  // Helper to save settings and notify parent
+  const saveAndNotify = (newEnabled, newBigha, newGatta) => {
+    localStorage.setItem('ac_settings_custom', String(newEnabled));
+    localStorage.setItem('ac_bigha_per_acre', newBigha);
+    localStorage.setItem('ac_gatta_inch', newGatta);
+
+    if (onSettingsChange) {
+      onSettingsChange({
+        enabled: newEnabled,
+        bighaPerAcre: parseFloat(newBigha) || 6.399,
+        gattaInch: parseFloat(newGatta) || 99.0
+      });
+    }
+  };
+
+  const handleToggleEnabled = (e) => {
+    const isChecked = e.target.checked;
+    setEnabled(isChecked);
+    if (!isChecked) {
+      // Revert to standard defaults
       setBighaPerAcre('6.399');
       setGattaInch('99.0');
+      saveAndNotify(false, '6.399', '99.0');
     } else {
-      localStorage.setItem('ac_bigha_per_acre', bighaPerAcre);
-      localStorage.setItem('ac_gatta_inch', gattaInch);
+      saveAndNotify(true, bighaPerAcre, gattaInch);
     }
-    if (onSettingsChange) onSettingsChange();
-  }, [enabled, bighaPerAcre, gattaInch, onSettingsChange]);
+  };
+
+  const handleBighaChange = (e) => {
+    const val = e.target.value;
+    setBighaPerAcre(val);
+    saveAndNotify(enabled, val, gattaInch);
+  };
+
+  const handleGattaChange = (e) => {
+    const val = e.target.value;
+    setGattaInch(val);
+    saveAndNotify(enabled, bighaPerAcre, val);
+  };
 
   const handleReset = () => {
     setBighaPerAcre('6.399');
     setGattaInch('99.0');
     setEnabled(false);
+    saveAndNotify(false, '6.399', '99.0');
   };
 
   return (
@@ -55,7 +80,7 @@ export default function CalculatorSettings({ onSettingsChange }) {
               <input 
                 type="checkbox"
                 checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
+                onChange={handleToggleEnabled}
               />
               Use Custom Regional Scale
             </label>
@@ -71,7 +96,7 @@ export default function CalculatorSettings({ onSettingsChange }) {
                   min="0.1"
                   value={bighaPerAcre}
                   disabled={!enabled}
-                  onChange={(e) => setBighaPerAcre(e.target.value)}
+                  onChange={handleBighaChange}
                 />
                 <span className="settings-unit">Bigha</span>
               </div>
@@ -86,7 +111,7 @@ export default function CalculatorSettings({ onSettingsChange }) {
                   min="1"
                   value={gattaInch}
                   disabled={!enabled}
-                  onChange={(e) => setGattaInch(e.target.value)}
+                  onChange={handleGattaChange}
                 />
                 <span className="settings-unit">Inch</span>
               </div>

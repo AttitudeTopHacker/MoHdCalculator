@@ -16,6 +16,8 @@ export default function TriangleArea() {
   const [showInstruction, setShowInstruction] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bighaScale, setBighaScale] = useState(getBighaPerAcre());
+  const [gattaScale, setGattaScale] = useState(getGattaInch());
 
   const convertToMeters = (val, currentUnit) => {
     const num = parseFloat(val);
@@ -123,12 +125,18 @@ export default function TriangleArea() {
         <div className="formula-box" style={{ marginTop: '0', marginBottom: '24px', background: 'var(--teal-dim)', borderColor: 'var(--teal)' }}>
           <div style={{ fontWeight: '700', color: 'var(--teal)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>💡 Reference Scale:</span>
-            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {getBighaPerAcre()} Bigha</span>
+            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {bighaScale} Bigha</span>
           </div>
         </div>
 
         {/* Global Settings Panel */}
-        <CalculatorSettings onSettingsChange={() => setResult(null)} />
+        <CalculatorSettings 
+          onSettingsChange={(newScale) => {
+            setBighaScale(newScale.bighaPerAcre);
+            setGattaScale(newScale.gattaInch);
+            setResult(null);
+          }} 
+        />
 
         <div className="glass-card">
           <div className="triangle-header-container">
@@ -145,7 +153,7 @@ export default function TriangleArea() {
                   onChange={() => { setUnit('gatta'); setResult(null); }}
                   style={{ accentColor: 'var(--teal)' }}
                 />
-                Gatta ({getGattaInch()}inch)
+                Gatta ({gattaScale}inch)
               </label>
 
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>

@@ -18,6 +18,8 @@ export default function RectangleArea() {
   const [breakdown, setBreakdown] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [bighaScale, setBighaScale] = useState(getBighaPerAcre());
+  const [gattaScale, setGattaScale] = useState(getGattaInch());
 
   // Mode state: 'calc' (RESULT screen) or 'compass' (CONVERT screen)
   const [mode, setMode] = useState('calc'); 
@@ -185,12 +187,19 @@ export default function RectangleArea() {
         <div className="formula-box" style={{ marginTop: '0', marginBottom: '24px', background: 'var(--teal-dim)', borderColor: 'var(--teal)' }}>
           <div style={{ fontWeight: '700', color: 'var(--teal)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>💡 Reference Scale:</span>
-            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {getBighaPerAcre()} Bigha</span>
+            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {bighaScale} Bigha</span>
           </div>
         </div>
 
         {/* Global Settings Panel */}
-        <CalculatorSettings onSettingsChange={() => { setBreakdown(null); setVisualizerData(null); }} />
+        <CalculatorSettings 
+          onSettingsChange={(newScale) => {
+            setBighaScale(newScale.bighaPerAcre);
+            setGattaScale(newScale.gattaInch);
+            setBreakdown(null); 
+            setVisualizerData(null);
+          }} 
+        />
 
         <div className="glass-card">
           {/* Mode Switcher Tabs */}
@@ -246,7 +255,7 @@ export default function RectangleArea() {
                       onChange={() => { setCalculatorUnit('gatta'); setBreakdown(null); }}
                       style={{ accentColor: 'var(--teal)' }}
                     />
-                    Gatta({getGattaInch()}inch)
+                    Gatta({gattaScale}inch)
                   </label>
 
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>
