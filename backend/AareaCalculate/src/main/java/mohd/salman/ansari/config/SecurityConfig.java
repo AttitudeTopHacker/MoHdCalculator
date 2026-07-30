@@ -21,7 +21,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -116,13 +118,39 @@ public class SecurityConfig {
 
     private OAuth2AuthorizationRequestResolver authorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository) {
-        DefaultOAuth2AuthorizationRequestResolver authorizationRequestResolver =
+        DefaultOAuth2AuthorizationRequestResolver resolver =
                 new DefaultOAuth2AuthorizationRequestResolver(
                         clientRegistrationRepository, "/login/oauth2");
-        authorizationRequestResolver.setAuthorizationRequestCustomizer(
+        resolver.setAuthorizationRequestCustomizer(
                 customizer -> customizer.additionalParameters(
                         params -> params.put("prompt", "select_account")));
-        return authorizationRequestResolver;
+
+        return new OAuth2AuthorizationRequestResolver() {
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+                OAuth2AuthorizationRequest authRequest = resolver.resolve(request);
+                return customizeState(authRequest, request);
+            }
+
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+                OAuth2AuthorizationRequest authRequest = resolver.resolve(request, clientRegistrationId);
+                return customizeState(authRequest, request);
+            }
+
+            private OAuth2AuthorizationRequest customizeState(OAuth2AuthorizationRequest authRequest, HttpServletRequest request) {
+                if (authRequest == null) return null;
+                String platform = request.getParameter("platform");
+                if ("mobile".equals(platform)) {
+                    String originalState = authRequest.getState();
+                    String newState = originalState + "_mobile";
+                    return OAuth2AuthorizationRequest.from(authRequest)
+                            .state(newState)
+                            .build();
+                }
+                return authRequest;
+            }
+        };
     }
 
     @Bean
