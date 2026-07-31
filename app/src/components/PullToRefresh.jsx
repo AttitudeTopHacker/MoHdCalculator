@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import './PullToRefresh.css';
 
 /**
- * PullToRefresh — scroll bottom pe pull karke hold karo to page reload
- * Works on Android WebView & mobile browsers.
+ * PullToRefresh — page ke top pe pull down karo to reload/reconnect
+ * Standard mobile pull-to-refresh pattern.
  */
 export default function PullToRefresh() {
   const [pullProgress, setPullProgress] = useState(0); // 0 to 1
@@ -14,13 +14,13 @@ export default function PullToRefresh() {
   const THRESHOLD = 80; // px pull required to trigger refresh
 
   useEffect(() => {
-    const isAtBottom = () => {
+    const isAtTop = () => {
       const el = document.scrollingElement || document.documentElement;
-      return el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
+      return el.scrollTop <= 0;
     };
 
     const onTouchStart = (e) => {
-      if (isAtBottom()) {
+      if (isAtTop()) {
         touchStartY.current = e.touches[0].clientY;
         isDragging.current = true;
       }
@@ -28,7 +28,7 @@ export default function PullToRefresh() {
 
     const onTouchMove = (e) => {
       if (!isDragging.current || touchStartY.current === null) return;
-      const dy = touchStartY.current - e.touches[0].clientY; // positive = pull up
+      const dy = e.touches[0].clientY - touchStartY.current; // positive = pull down
       if (dy > 0) {
         const progress = Math.min(dy / THRESHOLD, 1);
         setPullProgress(progress);
@@ -78,7 +78,7 @@ export default function PullToRefresh() {
         ↻
       </div>
       <span className="ptr-label">
-        {triggered ? 'Reconnecting...' : pullProgress >= 1 ? 'Release to refresh' : 'Pull up to refresh'}
+        {triggered ? 'Reconnecting...' : pullProgress >= 1 ? 'Release to refresh' : 'Pull down to refresh'}
       </span>
     </div>
   );

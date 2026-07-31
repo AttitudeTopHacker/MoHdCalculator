@@ -11,7 +11,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onStart() {
+    public void onStart() {
         super.onStart();
         // Disable native WebView scrollbars (CSS scrollbar hiding alone is not enough)
         WebView webView = getBridge().getWebView();
