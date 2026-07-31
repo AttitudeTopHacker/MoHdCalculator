@@ -259,19 +259,18 @@
   padding: 36px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   position: relative;
-  scrollbar-width: thin;
-  scrollbar-color: var(--teal) #101010;
+  scrollbar-width: none !important;
 }
 
 .modal-card::-webkit-scrollbar {
-  width: 6px;
+  display: none !important;
+  width: 0px !important;
 }
 .modal-card::-webkit-scrollbar-track {
-  background: #101010;
+  background: transparent !important;
 }
 .modal-card::-webkit-scrollbar-thumb {
-  background-color: var(--teal);
-  border-radius: 6px;
+  background-color: transparent !important;
 }
 
 @media (max-width: 500px) {
