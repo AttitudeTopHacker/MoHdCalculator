@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MoHd Calculator</string>
-    <string name="title_activity_main">MoHd Calculator</string>
+    <string name="app_name">AreaCalc.msm</string>
+    <string name="title_activity_main">AreaCalc.msm</string>
     <string name="package_name">com.msmmovin.areacalculator</string>
     <string name="custom_url_scheme">com.msmmovin.areacalculator</string>
     <string name="server_client_id">171584455552-8nqhjcm8lfn3u2otme8nrhv7n7ndv6af.apps.googleusercontent.com</string>
