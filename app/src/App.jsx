@@ -24,6 +24,7 @@ import RectangleArea from './pages/tools/RectangleArea';
 import AreaConvert from './pages/tools/AreaConvert';
 import ConvertSqMt from './pages/tools/ConvertSqMt';
 import LengthConvert from './pages/tools/LengthConvert';
+import PullToRefresh from './components/PullToRefresh';
 
 // ── Global Toast Listener ─────────────────────────────────────────────────────
 // Listens to 'ac:toast' CustomEvents fired by axios interceptor or showToast()
@@ -125,6 +126,9 @@ export default function App() {
       <AuthProvider>
         {/* Global toast — listens to all axios errors + showToast() calls */}
         <GlobalToastListener />
+
+        {/* Pull to refresh — scroll bottom pe pull up karo to reconnect */}
+        <PullToRefresh />
 
         <Routes>
           {/* Splash Screen */}
