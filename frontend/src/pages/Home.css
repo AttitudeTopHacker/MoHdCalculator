@@ -487,3 +487,58 @@
   .hero-cta { flex-direction: column; }
   .cta-primary, .cta-secondary { width: 100%; text-align: center; }
 }
+
+/* Shimmer Loader for Team Skeleton Card */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.1) 37%, rgba(255,255,255,0.03) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.team-skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 30px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.team-skeleton-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.team-skeleton-text {
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.team-skeleton-title {
+  width: 120px;
+  height: 18px;
+}
+
+.team-skeleton-subtitle {
+  width: 150px;
+  height: 12px;
+  margin-bottom: 18px;
+}
+
+.team-skeleton-desc {
+  width: 100%;
+  height: 40px;
+}

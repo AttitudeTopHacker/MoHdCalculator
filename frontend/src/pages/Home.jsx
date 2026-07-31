@@ -33,15 +33,8 @@ const FEATURES = [
 export default function Home() {
   const { isAuthenticated, logout } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [team, setTeam] = useState([
-    {
-      id: 'default-1',
-      name: 'Salman Ansari',
-      email: 'salman.ansari@example.com',
-      about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
-      pictureUrl: ''
-    }
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [team, setTeam] = useState([]);
 
   // Silently wake up Render backend in background
   useWakeup();
@@ -63,13 +56,36 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     adminApi.publicGetTeam()
       .then((res) => {
         if (res.data && res.data.data && res.data.data.length > 0) {
           setTeam(res.data.data);
+        } else {
+          setTeam([
+            {
+              id: 'default-1',
+              name: 'Salman Ansari',
+              email: 'salman.ansari@example.com',
+              about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
+              pictureUrl: ''
+            }
+          ]);
         }
       })
-      .catch((err) => console.error("Error fetching team list:", err));
+      .catch((err) => {
+        console.error("Error fetching team list:", err);
+        setTeam([
+          {
+            id: 'default-1',
+            name: 'Salman Ansari',
+            email: 'salman.ansari@example.com',
+            about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
+            pictureUrl: ''
+          }
+        ]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleLogout = () => {
@@ -203,27 +219,40 @@ export default function Home() {
       </section>
 
       {/* ── Meet Our Team ────────────────────────────────────── */}
-      {team.length > 0 && (
+      {(loading || team.length > 0) && (
         <section className="team-section-public">
           <p className="section-eyebrow">Our Experts</p>
           <h2 className="section-heading">Meet Our Team</h2>
 
-          <div className="team-public-grid">
-            {team.map((member) => (
-              <div className="team-public-card" key={member.id}>
-                <div className="team-public-avatar">
-                  {member.pictureUrl ? (
-                    <img src={member.pictureUrl} alt={member.name} className="team-public-avatar-img" />
-                  ) : (
-                    member.name.substring(0, 2).toUpperCase()
-                  )}
+          {loading ? (
+            <div className="team-public-grid">
+              {[1].map((n) => (
+                <div className="team-skeleton-card" key={n}>
+                  <div className="team-skeleton-avatar shimmer-bg" />
+                  <div className="team-skeleton-text team-skeleton-title shimmer-bg" />
+                  <div className="team-skeleton-text team-skeleton-subtitle shimmer-bg" />
+                  <div className="team-skeleton-text team-skeleton-desc shimmer-bg" />
                 </div>
-                <h3 className="team-public-name">{member.name}</h3>
-                <span className="team-public-email">{member.email}</span>
-                <p className="team-public-about">{member.about || 'Team expert and contributor.'}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="team-public-grid">
+              {team.map((member) => (
+                <div className="team-public-card" key={member.id}>
+                  <div className="team-public-avatar">
+                    {member.pictureUrl ? (
+                      <img src={member.pictureUrl} alt={member.name} className="team-public-avatar-img" referrerPolicy="no-referrer" />
+                    ) : (
+                      member.name.substring(0, 2).toUpperCase()
+                    )}
+                  </div>
+                  <h3 className="team-public-name">{member.name}</h3>
+                  <span className="team-public-email">{member.email}</span>
+                  <p className="team-public-about">{member.about || 'Team expert and contributor.'}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
