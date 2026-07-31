@@ -62,28 +62,12 @@ export default function Home() {
         if (res.data && res.data.data && res.data.data.length > 0) {
           setTeam(res.data.data);
         } else {
-          setTeam([
-            {
-              id: 'default-1',
-              name: 'Salman Ansari',
-              email: 'salman.ansari@example.com',
-              about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
-              pictureUrl: ''
-            }
-          ]);
+          setTeam([]);
         }
       })
       .catch((err) => {
         console.error("Error fetching team list:", err);
-        setTeam([
-          {
-            id: 'default-1',
-            name: 'Salman Ansari',
-            email: 'salman.ansari@example.com',
-            about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
-            pictureUrl: ''
-          }
-        ]);
+        setTeam([]);
       })
       .finally(() => setLoading(false));
   }, []);
