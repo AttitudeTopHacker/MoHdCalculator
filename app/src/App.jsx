@@ -119,16 +119,7 @@ function AdminRoute({ children }) {
   return children;
 }
 
-import { Capacitor } from '@capacitor/core';
-
 export default function App() {
-  useEffect(() => {
-    if (Capacitor.getPlatform() === 'android') {
-      document.documentElement.classList.add('platform-android');
-      document.body.classList.add('platform-android');
-    }
-  }, []);
-
   return (
     <BrowserRouter>
       <AuthProvider>

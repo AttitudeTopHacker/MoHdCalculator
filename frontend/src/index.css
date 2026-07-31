@@ -110,16 +110,12 @@ code {
   background: var(--code-bg);
 }
 
-/* Hide scrollbars specifically for Android native */
-html.platform-android ::-webkit-scrollbar,
-html.platform-android::-webkit-scrollbar,
-body.platform-android ::-webkit-scrollbar,
-body.platform-android::-webkit-scrollbar {
+/* Hide scrollbars globally from everywhere */
+::-webkit-scrollbar {
   display: none !important;
 }
 
-html.platform-android, 
-html.platform-android body {
+html, body, * {
   -ms-overflow-style: none !important;  /* IE and Edge */
   scrollbar-width: none !important;  /* Firefox */
 }
