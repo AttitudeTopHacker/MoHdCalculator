@@ -56,18 +56,27 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Load cached team data immediately (offline support)
+    const cached = localStorage.getItem('cached_team');
+    if (cached) {
+      try { setTeam(JSON.parse(cached)); } catch (_) {}
+    }
+
     setLoading(true);
     adminApi.publicGetTeam()
       .then((res) => {
         if (res.data && res.data.data && res.data.data.length > 0) {
           setTeam(res.data.data);
+          localStorage.setItem('cached_team', JSON.stringify(res.data.data));
         } else {
-          setTeam([]);
+          // Only clear if no cache
+          if (!cached) setTeam([]);
         }
       })
       .catch((err) => {
         console.error("Error fetching team list:", err);
-        setTeam([]);
+        // Offline: keep cached data if available, else hide section
+        if (!cached) setTeam([]);
       })
       .finally(() => setLoading(false));
   }, []);
