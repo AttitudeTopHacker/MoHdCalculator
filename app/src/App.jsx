@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { App as CapApp } from '@capacitor/app';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Toast from './components/Toast';
 import { TOAST_EVENT } from './utils/toast';
@@ -50,6 +51,62 @@ function GlobalToastListener() {
       duration={toast.duration}
       onClose={() => setToast(null)}
     />
+  );
+}
+
+// ── Android Back Button Handler ──────────────────────────────────────────────
+// Handles Android hardware/gesture back button:
+// - If navigable history exists: go back
+// - On root pages: show "Press again to exit" toast, then exit on 2nd press
+const ROOT_PATHS = ['/', '/home', '/login', '/signup', '/dashboard'];
+
+function BackButtonHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const backPressedRef = useRef(false);
+  const [exitToast, setExitToast] = useState(false);
+
+  useEffect(() => {
+    let listener;
+    const setup = async () => {
+      listener = await CapApp.addListener('backButton', () => {
+        const isRoot = ROOT_PATHS.includes(location.pathname);
+
+        if (!isRoot) {
+          // Go back in history
+          navigate(-1);
+          return;
+        }
+
+        // Root page: double press to exit
+        if (backPressedRef.current) {
+          CapApp.exitApp();
+          return;
+        }
+
+        backPressedRef.current = true;
+        setExitToast(true);
+        setTimeout(() => {
+          backPressedRef.current = false;
+          setExitToast(false);
+        }, 2000);
+      });
+    };
+    setup();
+    return () => { listener?.remove(); };
+  }, [location.pathname, navigate]);
+
+  if (!exitToast) return null;
+  return (
+    <div style={{
+      position: 'fixed', bottom: '40px', left: '50%', transform: 'translateX(-50%)',
+      background: 'rgba(20,20,30,0.9)', color: '#e0e0e0',
+      padding: '10px 22px', borderRadius: '999px', fontSize: '13px',
+      zIndex: 99999, backdropFilter: 'blur(8px)', whiteSpace: 'nowrap',
+      border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+    }}>
+      Press back again to exit
+    </div>
   );
 }
 
@@ -126,6 +183,9 @@ export default function App() {
       <AuthProvider>
         {/* Global toast — listens to all axios errors + showToast() calls */}
         <GlobalToastListener />
+
+        {/* Android back button — navigate back or exit on double press */}
+        <BackButtonHandler />
 
         {/* Pull to refresh — scroll bottom pe pull up karo to reconnect */}
         <PullToRefresh />
