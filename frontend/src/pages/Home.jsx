@@ -60,22 +60,21 @@ export default function Home() {
     const cached = localStorage.getItem('cached_team');
     if (cached) {
       try { setTeam(JSON.parse(cached)); } catch (_) {}
+      setLoading(true); // Only show shimmer for returning users (cache exists)
     }
+    // New users: no shimmer, section hidden until data arrives
 
-    setLoading(true);
     adminApi.publicGetTeam()
       .then((res) => {
         if (res.data && res.data.data && res.data.data.length > 0) {
           setTeam(res.data.data);
           localStorage.setItem('cached_team', JSON.stringify(res.data.data));
         } else {
-          // Only clear if no cache
           if (!cached) setTeam([]);
         }
       })
       .catch((err) => {
         console.error("Error fetching team list:", err);
-        // Offline: keep cached data if available, else hide section
         if (!cached) setTeam([]);
       })
       .finally(() => setLoading(false));
