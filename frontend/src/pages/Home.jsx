@@ -56,28 +56,31 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Always show shimmer while fetching
+    setLoading(true);
+
     // Load cached team data immediately (offline support)
     const cached = localStorage.getItem('cached_team');
     if (cached) {
       try { setTeam(JSON.parse(cached)); } catch (_) {}
-      setLoading(true); // Only show shimmer for returning users (cache exists)
     }
-    // New users: no shimmer, section hidden until data arrives
 
     adminApi.publicGetTeam()
       .then((res) => {
         if (res.data && res.data.data && res.data.data.length > 0) {
           setTeam(res.data.data);
           localStorage.setItem('cached_team', JSON.stringify(res.data.data));
-        } else {
-          if (!cached) setTeam([]);
         }
+        setLoading(false); // Data fetched (even if empty), stop shimmer
       })
       .catch((err) => {
         console.error("Error fetching team list:", err);
-        if (!cached) setTeam([]);
-      })
-      .finally(() => setLoading(false));
+        if (cached) {
+          // Offline but has cache — show cached, stop shimmer
+          setLoading(false);
+        }
+        // Offline + no cache: keep shimmer running (loading stays true)
+      });
   }, []);
 
   const handleLogout = () => {
