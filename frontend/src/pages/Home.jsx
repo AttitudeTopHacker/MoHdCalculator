@@ -56,36 +56,31 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Always show shimmer while fetching
     setLoading(true);
+
+    // Load cached team data immediately (offline support)
+    const cached = localStorage.getItem('cached_team');
+    if (cached) {
+      try { setTeam(JSON.parse(cached)); } catch (_) {}
+    }
+
     adminApi.publicGetTeam()
       .then((res) => {
         if (res.data && res.data.data && res.data.data.length > 0) {
           setTeam(res.data.data);
-        } else {
-          setTeam([
-            {
-              id: 'default-1',
-              name: 'Salman Ansari',
-              email: 'salman.ansari@example.com',
-              about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
-              pictureUrl: ''
-            }
-          ]);
+          localStorage.setItem('cached_team', JSON.stringify(res.data.data));
         }
+        setLoading(false); // Data fetched (even if empty), stop shimmer
       })
       .catch((err) => {
         console.error("Error fetching team list:", err);
-        setTeam([
-          {
-            id: 'default-1',
-            name: 'Salman Ansari',
-            email: 'salman.ansari@example.com',
-            about: 'Founder & Lead Developer. Architect of AreaCalculator\'s full-stack system.',
-            pictureUrl: ''
-          }
-        ]);
-      })
-      .finally(() => setLoading(false));
+        if (cached) {
+          // Offline but has cache — show cached, stop shimmer
+          setLoading(false);
+        }
+        // Offline + no cache: keep shimmer running (loading stays true)
+      });
   }, []);
 
   const handleLogout = () => {
