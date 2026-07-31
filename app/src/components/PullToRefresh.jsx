@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import './PullToRefresh.css';
 
 /**
- * PullToRefresh — page ke top pe pull down karo to reload/reconnect
- * Standard mobile pull-to-refresh pattern.
+ * PullToRefresh — sirf NAVBAR se pull down karo to reload/reconnect
+ * Touch must START within top 70px (navbar zone) to trigger.
+ * This prevents accidental triggers on maps or other interactive content.
  */
 export default function PullToRefresh() {
   const [pullProgress, setPullProgress] = useState(0); // 0 to 1
@@ -11,17 +12,15 @@ export default function PullToRefresh() {
   const touchStartY = useRef(null);
   const isDragging = useRef(false);
 
-  const THRESHOLD = 80; // px pull required to trigger refresh
+  const THRESHOLD = 80;       // px pull required to trigger refresh
+  const NAVBAR_ZONE = 70;     // px from top of screen — only this zone activates pull
 
   useEffect(() => {
-    const isAtTop = () => {
-      const el = document.scrollingElement || document.documentElement;
-      return el.scrollTop <= 0;
-    };
-
     const onTouchStart = (e) => {
-      if (isAtTop()) {
-        touchStartY.current = e.touches[0].clientY;
+      const startY = e.touches[0].clientY;
+      // Only activate if touch started within top navbar zone
+      if (startY <= NAVBAR_ZONE) {
+        touchStartY.current = startY;
         isDragging.current = true;
       }
     };
