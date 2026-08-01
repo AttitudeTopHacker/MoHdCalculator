@@ -63,3 +63,8 @@ server:
 logging:
   level:
     org.springframework.security: DEBUG
+
+# ── Resend Email API ──────────────────────────────────────────────────────────
+resend:
+  api-key: ${RESEND_API_KEY:}
+  from: ${RESEND_FROM_EMAIL:AreaCalculator <onboarding@resend.dev>}

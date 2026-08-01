@@ -56,6 +56,15 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    if (file(".env").exists()) {
+        file(".env").readLines().each { line ->
+            def trimmed = line.trim()
+            if (!trimmed.startsWith("#") && trimmed.contains("=")) {
+                def parts = trimmed.split("=", 2)
+                environment parts[0].trim(), parts[1].trim()
+            }
+        }
+    }
 }
 
 tasks.named('bootRun') {

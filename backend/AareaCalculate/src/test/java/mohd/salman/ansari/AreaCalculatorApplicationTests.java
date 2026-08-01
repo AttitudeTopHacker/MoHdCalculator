@@ -1,10 +1,10 @@
-package salman.ansari.enterprises;
+package mohd.salman.ansari;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AareaCalculateApplicationTests {
+class AreaCalculatorApplicationTests {
 
     @Test
     void contextLoads() {

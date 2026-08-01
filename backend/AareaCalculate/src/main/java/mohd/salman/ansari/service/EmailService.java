@@ -2,24 +2,36 @@ package mohd.salman.ansari.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
+
+    @Value("${resend.api-key:}")
+    private String resendApiKey;
+
+    @Value("${resend.from:AreaCalculator <onboarding@resend.dev>}")
+    private String resendFromEmail;
 
     /**
      * Send a password reset OTP to the user's email.
@@ -40,6 +52,35 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
+        if (resendApiKey != null && !resendApiKey.trim().isEmpty()) {
+            sendEmailViaResend(to, subject, htmlBody);
+        } else {
+            sendEmailViaSmtp(to, subject, htmlBody);
+        }
+    }
+
+    private void sendEmailViaResend(String to, String subject, String htmlBody) {
+        try {
+            String url = "https://api.resend.com/emails";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(resendApiKey);
+
+            Map<String, Object> body = Map.of(
+                "from", resendFromEmail,
+                "to", to,
+                "subject", subject,
+                "html", htmlBody
+            );
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity(url, request, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email via Resend API: " + e.getMessage(), e);
+        }
+    }
+
+    private void sendEmailViaSmtp(String to, String subject, String htmlBody) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -49,7 +90,7 @@ public class EmailService {
             helper.setText(htmlBody, true);
             mailSender.send(message);
         } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to send email via SMTP: " + e.getMessage(), e);
         }
     }
 
