@@ -33,6 +33,15 @@ public class EmailService {
     @Value("${resend.from:AreaCalculator <onboarding@resend.dev>}")
     private String resendFromEmail;
 
+    @Value("${gmail.client-id:}")
+    private String gmailClientId;
+
+    @Value("${gmail.client-secret:}")
+    private String gmailClientSecret;
+
+    @Value("${gmail.refresh-token:}")
+    private String gmailRefreshToken;
+
     /**
      * Send a password reset OTP to the user's email.
      */
@@ -52,10 +61,62 @@ public class EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
-        if (resendApiKey != null && !resendApiKey.trim().isEmpty()) {
+        if (gmailClientId != null && !gmailClientId.trim().isEmpty() &&
+            gmailClientSecret != null && !gmailClientSecret.trim().isEmpty() &&
+            gmailRefreshToken != null && !gmailRefreshToken.trim().isEmpty()) {
+            sendEmailViaGmailApi(to, subject, htmlBody);
+        } else if (resendApiKey != null && !resendApiKey.trim().isEmpty()) {
             sendEmailViaResend(to, subject, htmlBody);
         } else {
             sendEmailViaSmtp(to, subject, htmlBody);
+        }
+    }
+
+    private void sendEmailViaGmailApi(String to, String subject, String htmlBody) {
+        try {
+            // 1. Get Access Token using Refresh Token
+            String tokenUrl = "https://oauth2.googleapis.com/token";
+            HttpHeaders tokenHeaders = new HttpHeaders();
+            tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            String requestBody = "client_id=" + gmailClientId +
+                                 "&client_secret=" + gmailClientSecret +
+                                 "&refresh_token=" + gmailRefreshToken +
+                                 "&grant_type=refresh_token";
+
+            HttpEntity<String> tokenRequest = new HttpEntity<>(requestBody, tokenHeaders);
+            Map<String, Object> tokenResponse = restTemplate.postForObject(tokenUrl, tokenRequest, Map.class);
+            String accessToken = (String) tokenResponse.get("access_token");
+
+            if (accessToken == null) {
+                throw new RuntimeException("Access token not found in Google OAuth response");
+            }
+
+            // 2. Create MIME message using standard JavaMailSender helper
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+
+            // 3. Convert MIME message to Base64URL string
+            java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+            message.writeTo(buffer);
+            byte[] rawMessageBytes = buffer.toByteArray();
+            String encodedEmail = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(rawMessageBytes);
+
+            // 4. Send email via Gmail API
+            String sendUrl = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
+            HttpHeaders sendHeaders = new HttpHeaders();
+            sendHeaders.setContentType(MediaType.APPLICATION_JSON);
+            sendHeaders.setBearerAuth(accessToken);
+
+            Map<String, String> sendBody = Map.of("raw", encodedEmail);
+            HttpEntity<Map<String, String>> sendRequest = new HttpEntity<>(sendBody, sendHeaders);
+            restTemplate.postForEntity(sendUrl, sendRequest, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email via Gmail API: " + e.getMessage(), e);
         }
     }
 

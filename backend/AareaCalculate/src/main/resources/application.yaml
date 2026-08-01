@@ -68,3 +68,9 @@ logging:
 resend:
   api-key: ${RESEND_API_KEY:}
   from: ${RESEND_FROM_EMAIL:AreaCalculator <onboarding@resend.dev>}
+
+# ── Gmail API (HTTP REST API) ────────────────────────────────────────────────
+gmail:
+  client-id: ${GMAIL_CLIENT_ID:}
+  client-secret: ${GMAIL_CLIENT_SECRET:}
+  refresh-token: ${GMAIL_REFRESH_TOKEN:}
