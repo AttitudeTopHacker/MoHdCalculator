@@ -76,7 +76,7 @@
 
 .settings-inputs-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   transition: opacity 0.25s;
 }
@@ -160,7 +160,7 @@
   border-color: rgba(255, 78, 161, 0.4);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .settings-inputs-grid {
     grid-template-columns: 1fr;
   }

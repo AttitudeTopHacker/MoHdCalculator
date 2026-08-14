@@ -20,4 +20,5 @@ public class LengthBreadthRequest {
 
     private Double bighaPerAcre;
     private Double gattaInch;
+    private Double biswaPerBigha;
 }

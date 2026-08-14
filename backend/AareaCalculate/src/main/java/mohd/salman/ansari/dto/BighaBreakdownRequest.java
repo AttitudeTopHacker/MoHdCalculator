@@ -15,4 +15,5 @@ public class BighaBreakdownRequest {
     private Double areaInSqMetres;
 
     private Double bighaPerAcre;
+    private Double biswaPerBigha;
 }

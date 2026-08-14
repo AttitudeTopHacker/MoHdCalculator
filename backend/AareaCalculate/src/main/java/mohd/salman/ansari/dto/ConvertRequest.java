@@ -19,4 +19,5 @@ public class ConvertRequest {
     private String toUnit;
 
     private Double bighaPerAcre;
+    private Double biswaPerBigha;
 }

@@ -12,8 +12,14 @@ export const getBighaPerAcre = () => {
   return val ? parseFloat(val) : 6.399;
 };
 
+export const getBiswaPerBigha = () => {
+  const val = localStorage.getItem('ac_biswa_per_bigha');
+  return val ? parseFloat(val) : 20.0;
+};
+
 const getAreaFactors = () => {
   const bighaPerAcre = getBighaPerAcre();
+  const biswaPerBigha = getBiswaPerBigha();
   // 1 Acre = 4046.8564224 m2. Bigha factor = Acre / BighaPerAcre
   const bighaFactor = 4046.8564224 / bighaPerAcre;
   
@@ -29,8 +35,8 @@ const getAreaFactors = () => {
     "Acre": 4046.8564224,
     "Hectare": 10000.0,
     "Bigha": bighaFactor,
-    "Biswa": bighaFactor / 20.0,
-    "Biswansi": bighaFactor / 400.0
+    "Biswa": bighaFactor / biswaPerBigha,
+    "Biswansi": bighaFactor / (biswaPerBigha * 20.0)
   };
 };
 
@@ -78,6 +84,7 @@ export const getBighaBreakdown = (areaInSqMetres) => {
 export const getLengthBreadthBreakdown = (length, breadth) => {
   const area = length * breadth; // area in sq gatta
   const b = getBighaPerAcre();
+  const biswaPerBigha = getBiswaPerBigha();
   
   // 1 Acre = BighaPerAcre * 400 sq gatta. e.g. 6.4 * 400 = 2560 sq gatta
   const part1 = Math.floor(area / (b * 400.0));
@@ -86,8 +93,12 @@ export const getLengthBreadthBreakdown = (length, breadth) => {
   const part2 = Math.floor(rem1 / 400.0);
   const rem2 = rem1 % 400.0;
 
-  const part3 = Math.floor(rem2 / 20.0);
-  const part4 = Math.floor(rem2 % 20.0);
+  const sqGattaPerBiswa = 400.0 / biswaPerBigha;
+  const part3 = Math.floor(rem2 / sqGattaPerBiswa);
+  const rem3 = rem2 % sqGattaPerBiswa;
+
+  const sqGattaPerBiswansi = sqGattaPerBiswa / 20.0;
+  const part4 = Math.floor(rem3 / sqGattaPerBiswansi);
 
   return { part1, part2, part3, part4 };
 };

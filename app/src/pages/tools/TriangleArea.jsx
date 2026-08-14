@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
-import { calculateTriangleArea, getBighaBreakdown, getGattaInch, getBighaPerAcre } from '../../utils/localCalculator';
+import { calculateTriangleArea, getBighaBreakdown, getGattaInch, getBighaPerAcre, getBiswaPerBigha } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
 import CalculatorSettings from '../../components/CalculatorSettings';
 import './Tools.css';
@@ -17,6 +17,7 @@ export default function TriangleArea() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bighaScale, setBighaScale] = useState(getBighaPerAcre());
+  const [biswaScale, setBiswaScale] = useState(getBiswaPerBigha());
   const [gattaScale, setGattaScale] = useState(getGattaInch());
 
   const convertToMeters = (val, currentUnit) => {
@@ -125,7 +126,7 @@ export default function TriangleArea() {
         <div className="formula-box" style={{ marginTop: '0', marginBottom: '24px', background: 'var(--teal-dim)', borderColor: 'var(--teal)' }}>
           <div style={{ fontWeight: '700', color: 'var(--teal)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>💡 Reference Scale:</span>
-            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {bighaScale} Bigha</span>
+            <span style={{ color: 'var(--text-primary)' }}>1 Acre = {bighaScale} Bigha · 1 Bigha = {biswaScale} Biswa · 1 Gatta = {gattaScale} in</span>
           </div>
         </div>
 
@@ -133,6 +134,7 @@ export default function TriangleArea() {
         <CalculatorSettings 
           onSettingsChange={(newScale) => {
             setBighaScale(newScale.bighaPerAcre);
+            setBiswaScale(newScale.biswaPerBigha);
             setGattaScale(newScale.gattaInch);
             setResult(null);
           }} 

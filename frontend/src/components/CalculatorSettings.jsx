@@ -15,17 +15,23 @@ export default function CalculatorSettings({ onSettingsChange }) {
     return localStorage.getItem('ac_gatta_inch') || '99.0';
   });
 
+  const [biswaPerBigha, setBiswaPerBigha] = useState(() => {
+    return localStorage.getItem('ac_biswa_per_bigha') || '20';
+  });
+
   // Helper to save settings and notify parent
-  const saveAndNotify = (newEnabled, newBigha, newGatta) => {
+  const saveAndNotify = (newEnabled, newBigha, newGatta, newBiswa) => {
     localStorage.setItem('ac_settings_custom', String(newEnabled));
     localStorage.setItem('ac_bigha_per_acre', newBigha);
     localStorage.setItem('ac_gatta_inch', newGatta);
+    localStorage.setItem('ac_biswa_per_bigha', newBiswa);
 
     if (onSettingsChange) {
       onSettingsChange({
         enabled: newEnabled,
         bighaPerAcre: parseFloat(newBigha) || 6.399,
-        gattaInch: parseFloat(newGatta) || 99.0
+        gattaInch: parseFloat(newGatta) || 99.0,
+        biswaPerBigha: parseFloat(newBiswa) || 20.0
       });
     }
   };
@@ -37,29 +43,37 @@ export default function CalculatorSettings({ onSettingsChange }) {
       // Revert to standard defaults
       setBighaPerAcre('6.399');
       setGattaInch('99.0');
-      saveAndNotify(false, '6.399', '99.0');
+      setBiswaPerBigha('20');
+      saveAndNotify(false, '6.399', '99.0', '20');
     } else {
-      saveAndNotify(true, bighaPerAcre, gattaInch);
+      saveAndNotify(true, bighaPerAcre, gattaInch, biswaPerBigha);
     }
   };
 
   const handleBighaChange = (e) => {
     const val = e.target.value;
     setBighaPerAcre(val);
-    saveAndNotify(enabled, val, gattaInch);
+    saveAndNotify(enabled, val, gattaInch, biswaPerBigha);
   };
 
   const handleGattaChange = (e) => {
     const val = e.target.value;
     setGattaInch(val);
-    saveAndNotify(enabled, bighaPerAcre, val);
+    saveAndNotify(enabled, bighaPerAcre, val, biswaPerBigha);
+  };
+
+  const handleBiswaChange = (e) => {
+    const val = e.target.value;
+    setBiswaPerBigha(val);
+    saveAndNotify(enabled, bighaPerAcre, gattaInch, val);
   };
 
   const handleReset = () => {
     setBighaPerAcre('6.399');
     setGattaInch('99.0');
+    setBiswaPerBigha('20');
     setEnabled(false);
-    saveAndNotify(false, '6.399', '99.0');
+    saveAndNotify(false, '6.399', '99.0', '20');
   };
 
   return (
@@ -103,6 +117,21 @@ export default function CalculatorSettings({ onSettingsChange }) {
             </div>
 
             <div className="settings-field">
+              <label>Biswa Per Bigha</label>
+              <div className="settings-input-wrapper">
+                <input 
+                  type="number"
+                  step="any"
+                  min="0.1"
+                  value={biswaPerBigha}
+                  disabled={!enabled}
+                  onChange={handleBiswaChange}
+                />
+                <span className="settings-unit">Biswa</span>
+              </div>
+            </div>
+
+            <div className="settings-field">
               <label>Gatta Length (Inches)</label>
               <div className="settings-input-wrapper">
                 <input 
@@ -120,7 +149,7 @@ export default function CalculatorSettings({ onSettingsChange }) {
 
           <div className="settings-footer">
             <div className="current-scale-summary">
-              Current: 1 Acre = <strong>{parseFloat(bighaPerAcre)} Bigha</strong> · 1 Gatta = <strong>{parseFloat(gattaInch)} in</strong>
+              Current: 1 Acre = <strong>{parseFloat(bighaPerAcre)} Bigha</strong> · 1 Bigha = <strong>{parseFloat(biswaPerBigha)} Biswa</strong> · 1 Gatta = <strong>{parseFloat(gattaInch)} in</strong>
             </div>
             {enabled && (
               <button type="button" className="settings-reset-btn" onClick={handleReset}>
