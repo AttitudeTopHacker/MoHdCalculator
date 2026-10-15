@@ -12,6 +12,8 @@ export default function MapManual() {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
   const [showManualForm, setShowManualForm] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [gpsStatus, setGpsStatus] = useState('');
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -19,6 +21,11 @@ export default function MapManual() {
   const polygonRef = useRef(null);
   const markersRef = useRef([]);
   const controlsRef = useRef(null);
+  const locationControlRef = useRef(null);
+  const userLocationMarkerRef = useRef(null);
+  const userLocationCircleRef = useRef(null);
+  const watchIdRef = useRef(null);
+  const currentUserPosRef = useRef(null);
 
   // Load Google Maps script dynamically
   useEffect(() => {
@@ -36,11 +43,129 @@ export default function MapManual() {
     document.head.appendChild(script);
   }, []);
 
+  // Live Location Blue Pulse Icon (Google Maps Native Style)
+  const getLiveLocationIcon = () => {
+    if (!window.google || !window.google.maps) return null;
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer pulsing halo wave -->
+          <circle cx="17" cy="17" r="15" fill="#3B82F6" fill-opacity="0.28">
+            <animate attributeName="r" values="9;16;9" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="fill-opacity" values="0.45;0.05;0.45" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <!-- White solid disc border -->
+          <circle cx="17" cy="17" r="8.5" fill="#FFFFFF" />
+          <!-- Vivid Google Blue Live Core -->
+          <circle cx="17" cy="17" r="6.5" fill="#1D4ED8" />
+          <!-- Specular reflection highlight -->
+          <circle cx="15.5" cy="15.5" r="2" fill="#93C5FD" />
+        </svg>
+      `)}`,
+      scaledSize: new window.google.maps.Size(34, 34),
+      anchor: new window.google.maps.Point(17, 17),
+    };
+  };
+
+  // Create or update live user location marker & accuracy circle
+  const updateUserLocationMarker = (latLng, accuracy) => {
+    if (!mapRef.current || !window.google || !window.google.maps) return;
+
+    if (!userLocationMarkerRef.current) {
+      const marker = new window.google.maps.Marker({
+        position: latLng,
+        map: mapRef.current,
+        title: 'You are here (Live Location)',
+        zIndex: 9999, // Keep above plotted boundary markers
+        icon: getLiveLocationIcon(),
+        optimized: false,
+      });
+
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 4px 6px; font-size: 13px;">
+            <div style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px; margin-bottom: 2px;">
+              <span>📍 You Are Here</span>
+            </div>
+            <div style="color: #64748b; font-size: 11px;">Live Location Track Synced</div>
+          </div>
+        `
+      });
+
+      marker.addListener('click', () => {
+        infoWindow.open(mapRef.current, marker);
+      });
+
+      userLocationMarkerRef.current = marker;
+    } else {
+      userLocationMarkerRef.current.setPosition(latLng);
+      if (userLocationMarkerRef.current.getMap() !== mapRef.current) {
+        userLocationMarkerRef.current.setMap(mapRef.current);
+      }
+    }
+
+    // Accuracy Circle
+    const radius = Math.max(accuracy || 15, 8);
+    if (!userLocationCircleRef.current) {
+      userLocationCircleRef.current = new window.google.maps.Circle({
+        strokeColor: '#2563EB',
+        strokeOpacity: 0.35,
+        strokeWeight: 1,
+        fillColor: '#3B82F6',
+        fillOpacity: 0.12,
+        map: mapRef.current,
+        center: latLng,
+        radius: radius,
+        clickable: false,
+        zIndex: 9998,
+      });
+    } else {
+      userLocationCircleRef.current.setCenter(latLng);
+      userLocationCircleRef.current.setRadius(radius);
+      if (userLocationCircleRef.current.getMap() !== mapRef.current) {
+        userLocationCircleRef.current.setMap(mapRef.current);
+      }
+    }
+  };
+
+  // Center on user position smoothly
+  const centerOnMyLocation = () => {
+    if (!mapRef.current) return;
+    if (currentUserPosRef.current) {
+      const userLoc = new window.google.maps.LatLng(
+        currentUserPosRef.current.lat,
+        currentUserPosRef.current.lng
+      );
+      mapRef.current.panTo(userLoc);
+      mapRef.current.setZoom(18);
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          const userLoc = new window.google.maps.LatLng(latitude, longitude);
+          currentUserPosRef.current = { lat: latitude, lng: longitude };
+          setUserLocation({ lat: latitude, lng: longitude });
+          setGpsStatus(`GPS Synced (±${accuracy ? accuracy.toFixed(0) : 10}m)`);
+          if (mapRef.current) {
+            mapRef.current.panTo(userLoc);
+            mapRef.current.setZoom(18);
+          }
+          updateUserLocationMarker(userLoc, accuracy);
+        },
+        (err) => {
+          console.warn("Could not acquire location:", err.message);
+          setGpsStatus('Location unavailable');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  };
+
   // Initialize Map
   useEffect(() => {
     if (!googleLoaded || !mapContainerRef.current) return;
 
-    // Delhi center reference initially
+    // Default center reference initially
     const center = { lat: 28.6139, lng: 77.2090 };
     mapRef.current = new window.google.maps.Map(mapContainerRef.current, {
       center: center,
@@ -59,6 +184,10 @@ export default function MapManual() {
       mapRef.current.controls[window.google.maps.ControlPosition.TOP_RIGHT].push(controlsRef.current);
     }
 
+    if (locationControlRef.current) {
+      mapRef.current.controls[window.google.maps.ControlPosition.RIGHT_BOTTOM].push(locationControlRef.current);
+    }
+
     polylineRef.current = new window.google.maps.Polyline({
       strokeColor: '#2EE6C5',
       strokeOpacity: 0.8,
@@ -75,23 +204,49 @@ export default function MapManual() {
       map: mapRef.current,
     });
 
-    // Auto-locate user on initial page load / refresh
+    // Auto-locate user on initial page load / refresh & track live location
+    let initialCentered = false;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const userLoc = new window.google.maps.LatLng(
-            position.coords.latitude,
-            position.coords.longitude
-          );
-          if (mapRef.current) {
+          const { latitude, longitude, accuracy } = position.coords;
+          const userLoc = new window.google.maps.LatLng(latitude, longitude);
+          currentUserPosRef.current = { lat: latitude, lng: longitude };
+          setUserLocation({ lat: latitude, lng: longitude });
+          setGpsStatus(`GPS Synced (±${accuracy ? accuracy.toFixed(0) : 10}m)`);
+          if (mapRef.current && !initialCentered) {
+            initialCentered = true;
             mapRef.current.setCenter(userLoc);
             mapRef.current.setZoom(18); // Zoom in closer
           }
+          updateUserLocationMarker(userLoc, accuracy);
         },
         (err) => {
           console.warn("Initial user tracking failed:", err.message);
+          setGpsStatus('GPS signal weak');
         },
         { enableHighAccuracy: true, timeout: 10000 }
+      );
+
+      // Continuously sync live position
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          const userLoc = new window.google.maps.LatLng(latitude, longitude);
+          currentUserPosRef.current = { lat: latitude, lng: longitude };
+          setUserLocation({ lat: latitude, lng: longitude });
+          setGpsStatus(`Live GPS (±${accuracy ? accuracy.toFixed(0) : 10}m)`);
+          if (mapRef.current && !initialCentered) {
+            initialCentered = true;
+            mapRef.current.setCenter(userLoc);
+            mapRef.current.setZoom(18);
+          }
+          updateUserLocationMarker(userLoc, accuracy);
+        },
+        (err) => {
+          console.warn("Continuous user location sync failed:", err.message);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 }
       );
     }
 
@@ -113,6 +268,18 @@ export default function MapManual() {
 
     return () => {
       clearMarkers();
+      if (watchIdRef.current && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      if (userLocationMarkerRef.current) {
+        userLocationMarkerRef.current.setMap(null);
+        userLocationMarkerRef.current = null;
+      }
+      if (userLocationCircleRef.current) {
+        userLocationCircleRef.current.setMap(null);
+        userLocationCircleRef.current = null;
+      }
     };
   }, [googleLoaded]);
 
@@ -136,7 +303,7 @@ export default function MapManual() {
 
     const gPath = updatedPoints.map(p => new window.google.maps.LatLng(p.lat, p.lng));
 
-    // Draw markers
+    // Draw boundary markers P1, P2, ...
     updatedPoints.forEach((p, idx) => {
       const marker = new window.google.maps.Marker({
         position: new window.google.maps.LatLng(p.lat, p.lng),
@@ -248,7 +415,30 @@ export default function MapManual() {
 
         <div className="glass-card">
           <div className="map-manual-header">
-            <span className="status-badge simulated">Google Maps Integration</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span className="status-badge simulated">Google Maps Integration</span>
+              {userLocation && (
+                <span className="status-badge" style={{ 
+                  background: 'rgba(37, 99, 235, 0.15)', 
+                  border: '1px solid rgba(59, 130, 246, 0.4)', 
+                  color: '#60A5FA', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '6px',
+                  fontSize: '0.74rem'
+                }}>
+                  <span style={{ 
+                    width: '8px', 
+                    height: '8px', 
+                    borderRadius: '50%', 
+                    background: '#3B82F6', 
+                    boxShadow: '0 0 8px #3B82F6',
+                    display: 'inline-block' 
+                  }}></span>
+                  <span>{gpsStatus || 'Live Location Synced'}</span>
+                </span>
+              )}
+            </div>
             <div className="map-manual-header-buttons">
               <button 
                 type="button" 
@@ -312,7 +502,20 @@ export default function MapManual() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
+                {userLocation && (
+                  <button 
+                    type="button" 
+                    className="tool-btn-secondary" 
+                    style={{ padding: '8px 16px', fontSize: '0.82rem' }}
+                    onClick={() => {
+                      setLat(userLocation.lat.toFixed(6));
+                      setLng(userLocation.lng.toFixed(6));
+                    }}
+                  >
+                    🎯 Use Current Location
+                  </button>
+                )}
                 <button type="submit" className="tool-btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
                   📍 Add Pin Coordinate
                 </button>
@@ -369,6 +572,35 @@ export default function MapManual() {
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Custom Google Maps center location button - pushed into Google Maps DOM on init to show in fullscreen as well */}
+            <div ref={locationControlRef}>
+              <button 
+                type="button" 
+                onClick={centerOnMyLocation} 
+                title="Center on my live location"
+                aria-label="Center on my location"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '8px',
+                  background: 'rgba(15, 23, 42, 0.9)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1.5px solid rgba(46, 230, 197, 0.5)',
+                  color: 'var(--teal)',
+                  fontSize: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  margin: '12px',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                🎯
+              </button>
             </div>
 
             {/* Google Map Canvas */}

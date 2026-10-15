@@ -12,6 +12,16 @@ import './Dashboard.css';
 
 const TOOLS = [
   {
+    id: 'calculator',
+    title: 'Calculator',
+    desc: 'Bhav & Quantity Calculator: Weight (kg/g/mg), Liquid (L/ml), and Counting (Bricks/Pcs) with on-screen dialpad.',
+    icon: '🧮',
+    category: 'converters',
+    path: '/dashboard/calculator',
+    badge: 'Special Calc',
+    color: 'var(--teal)'
+  },
+  {
     id: 'map-auto',
     title: 'Map Auto',
     desc: 'Capture boundaries automatically using real-time GPS path tracking.',

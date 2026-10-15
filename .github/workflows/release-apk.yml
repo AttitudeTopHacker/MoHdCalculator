@@ -1,0 +1,91 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install Dependencies
+        run: |
+          npm --prefix frontend install
+          npm --prefix app install
+
+      - name: Build Web Assets & Sync Capacitor
+        run: |
+          npm --prefix app run build
+          cd app && npx cap sync android
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x app/android/gradlew
+
+      - name: Build Android Release APK
+        run: |
+          cd app/android
+          ./gradlew assembleRelease --stacktrace
+
+      - name: Locate and Prepare APK
+        id: apk
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ]; then
+            TAG_NAME="v1.03.0"
+          fi
+          
+          # Find generated release APK
+          RELEASE_APK=$(find app/android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          
+          if [ -z "$RELEASE_APK" ]; then
+            echo "Release APK not found! Checking any apk..."
+            RELEASE_APK=$(find app/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
+          
+          echo "Found APK at: $RELEASE_APK"
+          OUTPUT_APK="AreaCalculator-${TAG_NAME}.apk"
+          cp "$RELEASE_APK" "$OUTPUT_APK"
+          echo "apk_path=$OUTPUT_APK" >> $GITHUB_OUTPUT
+          echo "apk_name=$OUTPUT_APK" >> $GITHUB_OUTPUT
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.apk_name }}
+          path: ${{ steps.apk.outputs.apk_path }}
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: AreaCalculator ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ steps.apk.outputs.apk_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

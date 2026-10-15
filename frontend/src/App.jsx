@@ -24,6 +24,7 @@ import RectangleArea from './pages/tools/RectangleArea';
 import AreaConvert from './pages/tools/AreaConvert';
 import ConvertSqMt from './pages/tools/ConvertSqMt';
 import LengthConvert from './pages/tools/LengthConvert';
+import RateCalculator from './pages/tools/RateCalculator';
 
 // ── Global Toast Listener ─────────────────────────────────────────────────────
 // Listens to 'ac:toast' CustomEvents fired by axios interceptor or showToast()
@@ -157,6 +158,7 @@ export default function App() {
           <Route path="/dashboard/area-convert" element={<ProtectedRoute><AreaConvert /></ProtectedRoute>} />
           <Route path="/dashboard/convert-sq-mt" element={<ProtectedRoute><ConvertSqMt /></ProtectedRoute>} />
           <Route path="/dashboard/length-convert" element={<ProtectedRoute><LengthConvert /></ProtectedRoute>} />
+          <Route path="/dashboard/calculator" element={<ProtectedRoute><RateCalculator /></ProtectedRoute>} />
 
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
