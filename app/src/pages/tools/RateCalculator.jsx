@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { queueHistory } from '../../utils/historySync';
+import { showToast } from '../../utils/toast';
+import SavedProductsModal from '../../components/SavedProductsModal';
 import './Tools.css';
 
 // Units configuration
@@ -77,19 +79,65 @@ const CATEGORIES = {
   }
 };
 
-export default function RateCalculator() {
-  const [category, setCategory] = useState('weight');
-  const [calcMode, setCalcMode] = useState('budget'); // 'budget' (₹ -> Qty) | 'quantity' (Qty -> ₹)
+// Default presets per category
+function getCategoryDefaults(catKey) {
+  const config = CATEGORIES[catKey] || CATEGORIES.weight;
+  if (catKey === 'liquid') {
+    return {
+      productName: 'Mustard Oil / Milk',
+      ratePrice: config.defaultPrice,
+      rateQty: config.defaultQty,
+      rateUnit: config.defaultUnit,
+      targetBudget: '30',
+      targetQuantity: '500',
+      targetUnit: 'ml'
+    };
+  } else if (catKey === 'count') {
+    return {
+      productName: 'Red Bricks (Lal Eent)',
+      ratePrice: config.defaultPrice,
+      rateQty: config.defaultQty,
+      rateUnit: config.defaultUnit,
+      targetBudget: '12000',
+      targetQuantity: '3500',
+      targetUnit: 'bricks'
+    };
+  } else {
+    return {
+      productName: 'Basmati Rice / Aata',
+      ratePrice: config.defaultPrice,
+      rateQty: config.defaultQty,
+      rateUnit: config.defaultUnit,
+      targetBudget: '50',
+      targetQuantity: '250',
+      targetUnit: 'g'
+    };
+  }
+}
 
-  // Input states
-  const [ratePrice, setRatePrice] = useState('80');
-  const [rateQty, setRateQty] = useState('1');
-  const [rateUnit, setRateUnit] = useState('kg');
+export default function RateCalculator() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category');
+  const category = (urlCategory && CATEGORIES[urlCategory]) ? urlCategory : 'weight';
+
+  const [calcMode, setCalcMode] = useState('budget'); // 'budget' (₹ -> Qty) | 'quantity' (Qty -> ₹)
+  const [switchModalOpen, setSwitchModalOpen] = useState(false);
+
+  // Saved Products Modal state
+  const [savedProductsModalOpen, setSavedProductsModalOpen] = useState(false);
+  const [savedProductsModalMode, setSavedProductsModalMode] = useState('list'); // 'list' | 'add'
+
+  // Input states initialized dynamically from category presets
+  const initialDefaults = getCategoryDefaults(category);
+  const [productName, setProductName] = useState(initialDefaults.productName);
+  const [ratePrice, setRatePrice] = useState(initialDefaults.ratePrice);
+  const [rateQty, setRateQty] = useState(initialDefaults.rateQty);
+  const [rateUnit, setRateUnit] = useState(initialDefaults.rateUnit);
   
   // Target inputs
-  const [targetBudget, setTargetBudget] = useState('50');
-  const [targetQuantity, setTargetQuantity] = useState('250');
-  const [targetUnit, setTargetUnit] = useState('g');
+  const [targetBudget, setTargetBudget] = useState(initialDefaults.targetBudget);
+  const [targetQuantity, setTargetQuantity] = useState(initialDefaults.targetQuantity);
+  const [targetUnit, setTargetUnit] = useState(initialDefaults.targetUnit);
 
   // Currently focused field for on-screen dialpad
   // Options: 'ratePrice' | 'rateQty' | 'targetBudget' | 'targetQuantity'
@@ -98,27 +146,70 @@ export default function RateCalculator() {
   // Feedback toast
   const [savedToast, setSavedToast] = useState(false);
 
-  // Switch category defaults
-  const handleCategoryChange = (newCat) => {
-    setCategory(newCat);
-    const catConfig = CATEGORIES[newCat];
-    setRatePrice(catConfig.defaultPrice);
-    setRateQty(catConfig.defaultQty);
-    setRateUnit(catConfig.defaultUnit);
+  // Ref to track last applied category and prevent race conditions
+  const prevCatRef = useRef(category);
 
-    if (newCat === 'weight') {
-      setTargetBudget('50');
-      setTargetQuantity('250');
-      setTargetUnit('g');
-    } else if (newCat === 'liquid') {
-      setTargetBudget('30');
-      setTargetQuantity('500');
-      setTargetUnit('ml');
+  // Switch category defaults & synchronize searchParams in URL
+  const handleCategoryChange = useCallback((newCat) => {
+    if (!CATEGORIES[newCat]) return;
+    prevCatRef.current = newCat;
+    setSearchParams({ category: newCat });
+
+    const defaults = getCategoryDefaults(newCat);
+    setProductName(defaults.productName);
+    setRatePrice(defaults.ratePrice);
+    setRateQty(defaults.rateQty);
+    setRateUnit(defaults.rateUnit);
+    setTargetBudget(defaults.targetBudget);
+    setTargetQuantity(defaults.targetQuantity);
+    setTargetUnit(defaults.targetUnit);
+    if (calcMode === 'budget') {
+      setActiveField('targetBudget');
     } else {
-      setTargetBudget('12000');
-      setTargetQuantity('3500');
-      setTargetUnit('bricks');
+      setActiveField('targetQuantity');
     }
+  }, [setSearchParams, calcMode]);
+
+  // Sync category defaults if URL changes externally (e.g. browser back/forward)
+  useEffect(() => {
+    if (prevCatRef.current !== category) {
+      prevCatRef.current = category;
+      const defaults = getCategoryDefaults(category);
+      setProductName(defaults.productName);
+      setRatePrice(defaults.ratePrice);
+      setRateQty(defaults.rateQty);
+      setRateUnit(defaults.rateUnit);
+      setTargetBudget(defaults.targetBudget);
+      setTargetQuantity(defaults.targetQuantity);
+      setTargetUnit(defaults.targetUnit);
+    }
+  }, [category]);
+
+  // Open Load Modal
+  const handleOpenLoadModal = () => {
+    setSavedProductsModalMode('list');
+    setSavedProductsModalOpen(true);
+  };
+
+  // Open Save Current as Product Modal
+  const handleOpenSaveModal = () => {
+    setSavedProductsModalMode('add');
+    setSavedProductsModalOpen(true);
+  };
+
+  // Callback when a saved product is loaded into the calculator
+  const handleLoadProduct = (selectedProduct) => {
+    if (selectedProduct.category !== category) {
+      if (CATEGORIES[selectedProduct.category]) {
+        prevCatRef.current = selectedProduct.category;
+        setSearchParams({ category: selectedProduct.category });
+      }
+    }
+    setProductName(selectedProduct.name);
+    setRatePrice(selectedProduct.price);
+    setRateQty(selectedProduct.qty);
+    setRateUnit(selectedProduct.unit);
+    showToast(`Loaded "${selectedProduct.name}" (₹${selectedProduct.price} / ${selectedProduct.qty} ${selectedProduct.unit})`, 'success');
   };
 
   // Switch mode
@@ -249,13 +340,12 @@ export default function RateCalculator() {
     const currentCat = CATEGORIES[category];
 
     // ──────────────────────────────────────────
-    // Category 1: Weight (Normalized to Grams)
+    // Category 1: Weight (Kilogram, Gram, etc.)
     // ──────────────────────────────────────────
     if (category === 'weight') {
       const rateUnitObj = currentCat.units.find(u => u.id === rateUnit) || currentCat.units[0];
       const baseTotalGrams = q * rateUnitObj.factorToGram;
       const pricePerGram = p / baseTotalGrams;
-      const pricePerKg = pricePerGram * 1000;
 
       if (calcMode === 'budget') {
         const budget = parseFloat(targetBudget);
@@ -263,33 +353,44 @@ export default function RateCalculator() {
           return { error: 'Please enter a valid budget amount.' };
         }
         const obtainedGrams = budget / pricePerGram;
-        const obtainedKg = obtainedGrams / 1000;
-        const obtainedMg = obtainedGrams * 1000;
+        let formattedPrimary = '';
+        let primaryUnit = '';
+        let secondary = '';
 
+        if (obtainedGrams >= 1000) {
+          const kg = obtainedGrams / 1000;
+          formattedPrimary = `${kg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 3 })}`;
+          primaryUnit = 'kg';
+          secondary = `(${obtainedGrams.toLocaleString(undefined, { maximumFractionDigits: 0 })} grams)`;
+        } else {
+          formattedPrimary = `${obtainedGrams.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
+          primaryUnit = 'g';
+          secondary = `(${(obtainedGrams / 1000).toFixed(3)} kg)`;
+        }
+
+        const pricePerKg = pricePerGram * 1000;
         return {
           mode: 'budget',
-          primaryValue: obtainedGrams >= 1000 
-            ? `${obtainedKg.toLocaleString(undefined, { maximumFractionDigits: 3 })}` 
-            : `${obtainedGrams.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
-          primaryUnit: obtainedGrams >= 1000 ? 'kg' : 'gram',
-          secondaryText: `${obtainedKg.toFixed(3)} kg = ${obtainedGrams.toFixed(1)} g`,
+          primaryValue: formattedPrimary,
+          primaryUnit,
+          secondaryText: secondary,
           breakdown: [
-            { label: 'Grams', val: `${obtainedGrams.toLocaleString(undefined, { maximumFractionDigits: 2 })} g` },
-            { label: 'Kilograms', val: `${obtainedKg.toFixed(3)} kg` },
-            { label: 'Milligrams', val: `${obtainedMg.toLocaleString(undefined, { maximumFractionDigits: 0 })} mg` },
-            { label: 'Rate / kg', val: `₹ ${pricePerKg.toFixed(2)}` },
+            { label: 'Total Weight', val: `${(obtainedGrams / 1000).toFixed(3)} kg` },
+            { label: 'In Grams', val: `${obtainedGrams.toFixed(1)} g` },
+            { label: 'Per kg Rate', val: `₹ ${pricePerKg.toFixed(2)}` },
+            { label: 'Per 100g Rate', val: `₹ ${(pricePerGram * 100).toFixed(2)}` }
           ],
-          formula: `(₹ ${budget} ÷ ₹ ${pricePerKg.toFixed(2)}/kg) = ${obtainedGrams.toFixed(2)} Gram`,
+          formula: `(₹ ${budget} ÷ ₹ ${p}) × ${q} ${rateUnit} = ${formattedPrimary} ${primaryUnit}`,
         };
       } else {
-        // Mode: Quantity -> Price
         const targetQ = parseFloat(targetQuantity);
         if (isNaN(targetQ) || targetQ <= 0) {
-          return { error: 'Please enter a valid quantity.' };
+          return { error: 'Please enter a valid target weight quantity.' };
         }
-        const targetUnitObj = currentCat.units.find(u => u.id === targetUnit) || currentCat.units[1];
+        const targetUnitObj = currentCat.units.find(u => u.id === targetUnit) || currentCat.units[0];
         const targetTotalGrams = targetQ * targetUnitObj.factorToGram;
         const totalPrice = targetTotalGrams * pricePerGram;
+        const pricePerKg = pricePerGram * 1000;
 
         return {
           mode: 'quantity',
@@ -298,8 +399,8 @@ export default function RateCalculator() {
           secondaryText: `Total cost for ${targetQ} ${targetUnitObj.name}`,
           breakdown: [
             { label: 'Total Cost', val: `₹ ${totalPrice.toFixed(2)}` },
-            { label: 'Per Gram Rate', val: `₹ ${pricePerGram.toFixed(4)}` },
             { label: 'Per kg Rate', val: `₹ ${pricePerKg.toFixed(2)}` },
+            { label: 'Per 100g Rate', val: `₹ ${(pricePerGram * 100).toFixed(2)}` },
             { label: 'Net Weight', val: `${(targetTotalGrams / 1000).toFixed(3)} kg` }
           ],
           formula: `${targetQ} ${targetUnitObj.id} × ₹ ${pricePerKg.toFixed(2)}/kg = ₹ ${totalPrice.toFixed(2)}`,
@@ -308,13 +409,12 @@ export default function RateCalculator() {
     }
 
     // ──────────────────────────────────────────
-    // Category 2: Liquid (Normalized to Millilitres)
+    // Category 2: Liquid / Volume (Litre, mL)
     // ──────────────────────────────────────────
     if (category === 'liquid') {
       const rateUnitObj = currentCat.units.find(u => u.id === rateUnit) || currentCat.units[0];
       const baseTotalMl = q * rateUnitObj.factorToMl;
       const pricePerMl = p / baseTotalMl;
-      const pricePerLiter = pricePerMl * 1000;
 
       if (calcMode === 'budget') {
         const budget = parseFloat(targetBudget);
@@ -322,30 +422,44 @@ export default function RateCalculator() {
           return { error: 'Please enter a valid budget amount.' };
         }
         const obtainedMl = budget / pricePerMl;
-        const obtainedL = obtainedMl / 1000;
+        let formattedPrimary = '';
+        let primaryUnit = '';
+        let secondary = '';
 
+        if (obtainedMl >= 1000) {
+          const ltr = obtainedMl / 1000;
+          formattedPrimary = `${ltr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 3 })}`;
+          primaryUnit = 'L';
+          secondary = `(${obtainedMl.toLocaleString(undefined, { maximumFractionDigits: 0 })} mL)`;
+        } else {
+          formattedPrimary = `${obtainedMl.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
+          primaryUnit = 'ml';
+          secondary = `(${(obtainedMl / 1000).toFixed(3)} L)`;
+        }
+
+        const pricePerLiter = pricePerMl * 1000;
         return {
           mode: 'budget',
-          primaryValue: obtainedMl >= 1000 
-            ? `${obtainedL.toLocaleString(undefined, { maximumFractionDigits: 3 })}` 
-            : `${obtainedMl.toLocaleString(undefined, { maximumFractionDigits: 1 })}`,
-          primaryUnit: obtainedMl >= 1000 ? 'Litre' : 'mL',
-          secondaryText: `${obtainedL.toFixed(3)} L = ${obtainedMl.toFixed(1)} mL`,
+          primaryValue: formattedPrimary,
+          primaryUnit,
+          secondaryText: secondary,
           breakdown: [
-            { label: 'Millilitres', val: `${obtainedMl.toLocaleString(undefined, { maximumFractionDigits: 1 })} mL` },
-            { label: 'Litres', val: `${obtainedL.toFixed(3)} L` },
-            { label: 'Rate / Litre', val: `₹ ${pricePerLiter.toFixed(2)}` },
+            { label: 'Total Volume', val: `${(obtainedMl / 1000).toFixed(3)} L` },
+            { label: 'In mL', val: `${obtainedMl.toFixed(1)} ml` },
+            { label: 'Per Litre Rate', val: `₹ ${pricePerLiter.toFixed(2)}` },
+            { label: 'Per 100ml Rate', val: `₹ ${(pricePerMl * 100).toFixed(2)}` }
           ],
-          formula: `(₹ ${budget} ÷ ₹ ${pricePerLiter.toFixed(2)}/L) = ${obtainedMl.toFixed(1)} mL`,
+          formula: `(₹ ${budget} ÷ ₹ ${p}) × ${q} ${rateUnit} = ${formattedPrimary} ${primaryUnit}`,
         };
       } else {
         const targetQ = parseFloat(targetQuantity);
         if (isNaN(targetQ) || targetQ <= 0) {
-          return { error: 'Please enter a valid volume quantity.' };
+          return { error: 'Please enter a valid target volume quantity.' };
         }
-        const targetUnitObj = currentCat.units.find(u => u.id === targetUnit) || currentCat.units[1];
+        const targetUnitObj = currentCat.units.find(u => u.id === targetUnit) || currentCat.units[0];
         const targetTotalMl = targetQ * targetUnitObj.factorToMl;
         const totalPrice = targetTotalMl * pricePerMl;
+        const pricePerLiter = pricePerMl * 1000;
 
         return {
           mode: 'quantity',
@@ -425,8 +539,8 @@ export default function RateCalculator() {
 
     const currCat = CATEGORIES[category];
     const summary = calcMode === 'budget'
-      ? `Rate: ₹${ratePrice} / ${rateQty} ${rateUnit} | Budget: ₹${targetBudget}`
-      : `Rate: ₹${ratePrice} / ${rateQty} ${rateUnit} | Quantity: ${targetQuantity} ${targetUnit}`;
+      ? `[${productName}] Rate: ₹${ratePrice} / ${rateQty} ${rateUnit} | Budget: ₹${targetBudget}`
+      : `[${productName}] Rate: ₹${ratePrice} / ${rateQty} ${rateUnit} | Quantity: ${targetQuantity} ${targetUnit}`;
 
     const res = `${calculationResult.primaryValue} ${calculationResult.primaryUnit || ''} (${calculationResult.secondaryText || ''})`;
 
@@ -435,74 +549,259 @@ export default function RateCalculator() {
     setTimeout(() => setSavedToast(false), 3000);
   };
 
-  const currentCategoryConfig = CATEGORIES[category];
+  const currentCategoryConfig = CATEGORIES[category] || CATEGORIES.weight;
 
   return (
     <div className="tool-page">
       <header className="tool-header">
         <div className="tool-header-title">
-          <span className="tool-header-icon">🧮</span>
-          <span>Calculator</span>
+          <span className="tool-header-icon">{currentCategoryConfig.icon}</span>
+          <span>{currentCategoryConfig.name} Calculator</span>
         </div>
         <Link to="/dashboard" className="btn-back">
           ← Back
         </Link>
       </header>
 
-      <main className="tool-main rate-calc-main" style={{ maxWidth: '960px' }}>
-        <div className="tool-welcome-badge">Rate & Units Dialpad</div>
-        <h1 className="tool-title">Calculator</h1>
-        <p className="tool-desc">
-          Instant unit rate calculator for Weight, Liquid, and Counting (Bricks/Pcs). Calculate cost or quantity with the built-in dialpad.
-        </p>
-
-        {/* Category Tabs: Weight, Liquid, Counting */}
-        <div className="calc-category-tabs">
-          {Object.values(CATEGORIES).map((cat) => (
+      <main className="tool-main rate-calc-main" style={{ maxWidth: '780px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="calc-top-actions-group">
             <button
-              key={cat.id}
               type="button"
-              id={`tab-${cat.id}`}
-              className={`calc-category-btn ${category === cat.id ? 'active' : ''}`}
-              onClick={() => handleCategoryChange(cat.id)}
+              className="calc-action-pill calc-add-pill"
+              id="btn-open-add-product"
+              onClick={handleOpenSaveModal}
             >
-              <span>{cat.icon}</span>
-              <span>{cat.name}</span>
+              <span>➕ Add Product</span>
             </button>
-          ))}
+            <button
+              type="button"
+              className="calc-change-cat-pill"
+              id="btn-switch-category-pill"
+              onClick={() => setSwitchModalOpen(true)}
+            >
+              <span>🔄 Switch Calculator</span>
+            </button>
+          </div>
         </div>
 
-        {/* Calculation Mode Toggle */}
-        <div className="calc-mode-segmented">
-          <button
-            type="button"
-            id="mode-budget"
-            className={`calc-mode-btn ${calcMode === 'budget' ? 'active' : ''}`}
-            onClick={() => handleModeChange('budget')}
-          >
-            <div className="mode-btn-row">
-              <span className="mode-btn-icon">💰</span>
-              <span className="mode-btn-title">Budget ➔ Qty</span>
-            </div>
-            <span className="mode-btn-sub">How much will I get?</span>
-          </button>
-          <button
-            type="button"
-            id="mode-quantity"
-            className={`calc-mode-btn ${calcMode === 'quantity' ? 'active' : ''}`}
-            onClick={() => handleModeChange('quantity')}
-          >
-            <div className="mode-btn-row">
-              <span className="mode-btn-icon">📦</span>
-              <span className="mode-btn-title">Qty ➔ Price</span>
-            </div>
-            <span className="mode-btn-sub">How much will it cost?</span>
-          </button>
-        </div>
+        <h1 className="tool-title" style={{ marginBottom: '6px' }}>
+          {currentCategoryConfig.name} Calculator
+        </h1>
+        <p className="tool-desc" style={{ marginBottom: '16px' }}>
+          {category === 'weight' && 'Calculate unit rates and amounts for Kilograms (kg), Grams (g), Milligrams (mg), and Quintals.'}
+          {category === 'liquid' && 'Calculate unit rates and volumes for Litres (L) and Millilitres (ml).'}
+          {category === 'count' && 'Calculate unit rates and quantities for Bricks, Pieces (Pcs), Dozen, and Bags.'}
+        </p>
 
         <div className="rate-calc-grid">
           
-          {/* 1. Live Instant Results Display Card (Order 1 on mobile, Col 2 Row 1 on desktop) */}
+          {/* 1. Product Name & Target Inputs with Integrated Mode Toggle */}
+          <div className="rate-inputs-card glass-card">
+            
+            {/* 1. Product Name & Rate Inputs */}
+            <div style={{ marginBottom: '16px' }}>
+              <div className="calc-product-header-row">
+                <div className="rate-section-title" style={{ color: 'var(--teal)', margin: 0 }}>
+                  1. Product Name
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    className="calc-quick-load-btn"
+                    id="btn-quick-load-product"
+                    onClick={handleOpenLoadModal}
+                    title="Load from Saved Products"
+                  >
+                    <span>📂 Load</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Product Name Display (Read-only) */}
+              <div className="calc-product-name-row">
+                <div className="calc-product-name-display-box" id="calc-current-product-name">
+                  <span className="calc-prod-icon">🏷️</span>
+                  <span className="calc-product-name-text">{productName}</span>
+                </div>
+              </div>
+              
+              <div className="rate-base-inputs-row">
+                {/* Rate Price */}
+                <div 
+                  id="field-rate-price"
+                  className={`calc-interactive-field ${activeField === 'ratePrice' ? 'active-field' : ''}`}
+                  onClick={() => setActiveField('ratePrice')}
+                >
+                  <div className="calc-field-top">
+                    <span>Price</span>
+                  </div>
+                  <div className="calc-field-main">
+                    <div className="calc-field-value">
+                      <span>₹ {ratePrice || '0'}</span>
+                      {activeField === 'ratePrice' && <span className="calc-cursor" />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rate Quantity with Unit Dropdown */}
+                <div 
+                  id="field-rate-qty"
+                  className={`calc-interactive-field ${activeField === 'rateQty' ? 'active-field' : ''}`}
+                  onClick={() => setActiveField('rateQty')}
+                >
+                  <div className="calc-field-top">
+                    <span>Per Qty</span>
+                    <select 
+                      value={rateUnit} 
+                      onChange={(e) => setRateUnit(e.target.value)}
+                      className="calc-select-dropdown"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {currentCategoryConfig.units.map(u => (
+                        <option key={u.id} value={u.id}>
+                          {u.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="calc-field-main">
+                    <div className="calc-field-value">
+                      <span>{rateQty || '0'}</span>
+                      {activeField === 'rateQty' && <span className="calc-cursor" />}
+                    </div>
+                    <span className="calc-field-unit">{rateUnit}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mode Toggle Switch & Target Input */}
+            <div>
+              <div className="rate-mode-toggle-bar">
+                <span className="rate-section-title" style={{ color: 'var(--magenta)' }}>
+                  2. Mode & Target
+                </span>
+                
+                {/* Modern Sliding Mode Toggle */}
+                <div className="rate-mode-switch">
+                  <button
+                    type="button"
+                    id="mode-budget"
+                    className={`rate-switch-btn ${calcMode === 'budget' ? 'active' : ''}`}
+                    onClick={() => handleModeChange('budget')}
+                  >
+                    <span>💰 Budget ➔ Qty</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="mode-quantity"
+                    className={`rate-switch-btn ${calcMode === 'quantity' ? 'active' : ''}`}
+                    onClick={() => handleModeChange('quantity')}
+                  >
+                    <span>📦 Qty ➔ Price</span>
+                  </button>
+                </div>
+              </div>
+
+              {calcMode === 'budget' ? (
+                /* Budget Input */
+                <div 
+                  id="field-target-budget"
+                  className={`calc-interactive-field ${activeField === 'targetBudget' ? 'active-field' : ''}`}
+                  onClick={() => setActiveField('targetBudget')}
+                >
+                  <div className="calc-field-top">
+                    <span>Target Budget Amount</span>
+                  </div>
+                  <div className="calc-field-main">
+                    <div className="calc-field-value target-highlight-val">
+                      <span>₹ {targetBudget || '0'}</span>
+                      {activeField === 'targetBudget' && <span className="calc-cursor" />}
+                    </div>
+                    <span className="calc-field-unit">Rupees (₹)</span>
+                  </div>
+                </div>
+              ) : (
+                /* Quantity Input with Unit selector */
+                <div 
+                  id="field-target-quantity"
+                  className={`calc-interactive-field ${activeField === 'targetQuantity' ? 'active-field' : ''}`}
+                  onClick={() => setActiveField('targetQuantity')}
+                >
+                  <div className="calc-field-top">
+                    <span>Quantity Needed</span>
+                    <select 
+                      value={targetUnit} 
+                      onChange={(e) => setTargetUnit(e.target.value)}
+                      className="calc-select-dropdown"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {currentCategoryConfig.units.map(u => (
+                        <option key={u.id} value={u.id}>
+                          {u.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="calc-field-main">
+                    <div className="calc-field-value target-highlight-val">
+                      <span>{targetQuantity || '0'}</span>
+                      {activeField === 'targetQuantity' && <span className="calc-cursor" />}
+                    </div>
+                    <span className="calc-field-unit">{targetUnit}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* 2. Dialpad & Quick Chips Card */}
+          <div className="rate-dialpad-card dialpad-card">
+            {/* Quick Chips Row */}
+            <div className="quick-chips-bar">
+              <span className="quick-chips-label">Quick:</span>
+              {(calcMode === 'budget' 
+                ? currentCategoryConfig.chips.budget 
+                : currentCategoryConfig.chips.quantity
+              ).map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="quick-chip-btn"
+                  onClick={() => handleQuickChip(chip)}
+                >
+                  {typeof chip === 'string' ? `₹ ${chip}` : chip.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Number Keys Grid */}
+            <div className="dialpad-grid-layout">
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('7')}>7</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('8')}>8</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('9')}>9</button>
+              <button type="button" className="dialpad-key action-backspace" onClick={() => handleDialpadPress('BACKSPACE')} aria-label="Backspace">⌫</button>
+
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('4')}>4</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('5')}>5</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('6')}>6</button>
+              <button type="button" className="dialpad-key action-clear" onClick={() => handleDialpadPress('CLEAR')}>C</button>
+
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('1')}>1</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('2')}>2</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('3')}>3</button>
+              <button type="button" className="dialpad-key action-plus-hundred" onClick={() => handleQuickChip('+100')}>+100</button>
+
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('0')}>0</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('00')}>00</button>
+              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('.')}>.</button>
+              <button type="button" className="dialpad-key action-next" onClick={() => handleDialpadPress('NEXT')}>Next ➔</button>
+            </div>
+          </div>
+
+          {/* 3. Live Instant Results Display Card (BELOW the calculator!) */}
           <div className="rate-result-card">
             <div className="rate-result-top-bar">
               <span className="rate-result-badge">
@@ -576,179 +875,7 @@ export default function RateCalculator() {
             )}
           </div>
 
-          {/* 2. Interactive Inputs Card (Order 2 on mobile, Col 1 Row 1 on desktop) */}
-          <div className="rate-inputs-card glass-card">
-            
-            {/* Base Rate Input Row */}
-            <div style={{ marginBottom: '12px' }}>
-              <div className="rate-section-title" style={{ color: 'var(--teal)' }}>
-                1. Base Rate
-              </div>
-              
-              <div className="rate-base-inputs-row">
-                {/* Rate Price */}
-                <div 
-                  id="field-rate-price"
-                  className={`calc-interactive-field ${activeField === 'ratePrice' ? 'active-field' : ''}`}
-                  onClick={() => setActiveField('ratePrice')}
-                >
-                  <div className="calc-field-top">
-                    <span>Rate Price (₹)</span>
-                    {activeField === 'ratePrice' ? (
-                      <span className="field-badge-editing">Active</span>
-                    ) : (
-                      <span className="field-badge-hint">Tap</span>
-                    )}
-                  </div>
-                  <div className="calc-field-main">
-                    <div className="calc-field-value">
-                      <span>₹ {ratePrice || '0'}</span>
-                      {activeField === 'ratePrice' && <span className="calc-cursor" />}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Rate Quantity with Unit Dropdown */}
-                <div 
-                  id="field-rate-qty"
-                  className={`calc-interactive-field ${activeField === 'rateQty' ? 'active-field' : ''}`}
-                  onClick={() => setActiveField('rateQty')}
-                >
-                  <div className="calc-field-top">
-                    <span>Per Qty</span>
-                    <select 
-                      value={rateUnit} 
-                      onChange={(e) => setRateUnit(e.target.value)}
-                      className="calc-select-dropdown"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {currentCategoryConfig.units.map(u => (
-                        <option key={u.id} value={u.id}>
-                          {u.id}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="calc-field-main">
-                    <div className="calc-field-value">
-                      <span>{rateQty || '0'}</span>
-                      {activeField === 'rateQty' && <span className="calc-cursor" />}
-                    </div>
-                    <span className="calc-field-unit">{rateUnit}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Target Input based on Mode */}
-            <div>
-              <div className="rate-section-title" style={{ color: 'var(--magenta)' }}>
-                {calcMode === 'budget' ? '2. Target Budget' : '2. Required Quantity'}
-              </div>
-
-              {calcMode === 'budget' ? (
-                /* Budget Input */
-                <div 
-                  id="field-target-budget"
-                  className={`calc-interactive-field ${activeField === 'targetBudget' ? 'active-field' : ''}`}
-                  onClick={() => setActiveField('targetBudget')}
-                >
-                  <div className="calc-field-top">
-                    <span>Total Budget Amount</span>
-                    {activeField === 'targetBudget' ? (
-                      <span className="field-badge-editing">Active</span>
-                    ) : (
-                      <span className="field-badge-hint">Tap</span>
-                    )}
-                  </div>
-                  <div className="calc-field-main">
-                    <div className="calc-field-value target-highlight-val">
-                      <span>₹ {targetBudget || '0'}</span>
-                      {activeField === 'targetBudget' && <span className="calc-cursor" />}
-                    </div>
-                    <span className="calc-field-unit">Rupees (₹)</span>
-                  </div>
-                </div>
-              ) : (
-                /* Quantity Input with Unit selector */
-                <div 
-                  id="field-target-quantity"
-                  className={`calc-interactive-field ${activeField === 'targetQuantity' ? 'active-field' : ''}`}
-                  onClick={() => setActiveField('targetQuantity')}
-                >
-                  <div className="calc-field-top">
-                    <span>Quantity Needed</span>
-                    <select 
-                      value={targetUnit} 
-                      onChange={(e) => setTargetUnit(e.target.value)}
-                      className="calc-select-dropdown"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {currentCategoryConfig.units.map(u => (
-                        <option key={u.id} value={u.id}>
-                          {u.id}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="calc-field-main">
-                    <div className="calc-field-value target-highlight-val">
-                      <span>{targetQuantity || '0'}</span>
-                      {activeField === 'targetQuantity' && <span className="calc-cursor" />}
-                    </div>
-                    <span className="calc-field-unit">{targetUnit}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* 3. Dialpad & Quick Chips Card (Order 3 on mobile, Col 1 Row 2 on desktop) */}
-          <div className="rate-dialpad-card dialpad-card">
-            {/* Quick Chips Row */}
-            <div className="quick-chips-bar">
-              <span className="quick-chips-label">Quick:</span>
-              {(calcMode === 'budget' 
-                ? currentCategoryConfig.chips.budget 
-                : currentCategoryConfig.chips.quantity
-              ).map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="quick-chip-btn"
-                  onClick={() => handleQuickChip(chip)}
-                >
-                  {typeof chip === 'string' ? `₹ ${chip}` : chip.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Number Keys Grid */}
-            <div className="dialpad-grid-layout">
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('7')}>7</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('8')}>8</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('9')}>9</button>
-              <button type="button" className="dialpad-key action-backspace" onClick={() => handleDialpadPress('BACKSPACE')} aria-label="Backspace">⌫</button>
-
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('4')}>4</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('5')}>5</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('6')}>6</button>
-              <button type="button" className="dialpad-key action-clear" onClick={() => handleDialpadPress('CLEAR')}>C</button>
-
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('1')}>1</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('2')}>2</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('3')}>3</button>
-              <button type="button" className="dialpad-key action-plus-hundred" onClick={() => handleQuickChip('+100')}>+100</button>
-
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('0')}>0</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('00')}>00</button>
-              <button type="button" className="dialpad-key" onClick={() => handleDialpadPress('.')}>.</button>
-              <button type="button" className="dialpad-key action-next" onClick={() => handleDialpadPress('NEXT')}>Next ➔</button>
-            </div>
-          </div>
-
-          {/* 4. Quick Context / Guide Card (Order 4 on mobile, Col 2 Row 2 on desktop) */}
+          {/* 4. Quick Context / Guide Card */}
           <div className="rate-guide-card glass-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--teal)', fontWeight: '700', fontSize: '0.85rem', marginBottom: '6px' }}>
               <span>💡 Market & Construction Guide</span>
@@ -762,8 +889,96 @@ export default function RateCalculator() {
 
         </div>
       </main>
+
+      {/* Category Switcher Modal */}
+      {switchModalOpen && (
+        <div className="calc-modal-overlay" onClick={() => setSwitchModalOpen(false)}>
+          <div className="calc-chooser-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="calc-chooser-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '1.6rem' }}>🔄</span>
+                <div>
+                  <h2 className="modal-title" style={{ fontSize: '1.2rem', margin: 0, color: '#ffffff' }}>Switch Calculator</h2>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                    Select a category to switch calculation mode:
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                className="calc-chooser-close-btn" 
+                onClick={() => setSwitchModalOpen(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="calc-chooser-options">
+              {Object.values(CATEGORIES).map((cat) => {
+                const isSelected = category === cat.id;
+                return (
+                  <div 
+                    key={cat.id}
+                    id={`switch-option-${cat.id}`}
+                    role="button"
+                    tabIndex={0}
+                    className={`calc-option-card ${isSelected ? 'calc-option-active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCategoryChange(cat.id);
+                      setSwitchModalOpen(false);
+                      showToast(`Switched to ${cat.name} Calculator`, 'info');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCategoryChange(cat.id);
+                        setSwitchModalOpen(false);
+                        showToast(`Switched to ${cat.name} Calculator`, 'info');
+                      }
+                    }}
+                  >
+                    <div className="calc-option-icon">{cat.icon}</div>
+                    <div className="calc-option-content">
+                      <div className="calc-option-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{cat.name} Calculator</span>
+                        {isSelected && (
+                          <span style={{ fontSize: '0.68rem', padding: '2px 8px', borderRadius: '20px', background: 'var(--teal)', color: '#0c0d12', fontWeight: '700' }}>
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <div className="calc-option-desc">
+                        {cat.id === 'weight' && 'Kilogram (kg), Gram (g), Milligram (mg), Quintal'}
+                        {cat.id === 'liquid' && 'Litre (L), Millilitre (ml)'}
+                        {cat.id === 'count' && 'Bricks, Pieces (Pcs), Dozen, Bags'}
+                      </div>
+                    </div>
+                    <div className="calc-option-arrow">➔</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Saved Products Modal */}
+      <SavedProductsModal
+        isOpen={savedProductsModalOpen}
+        onClose={() => setSavedProductsModalOpen(false)}
+        onLoadProduct={handleLoadProduct}
+        initialCategory={category}
+        initialMode={savedProductsModalMode}
+        presetProductData={{
+          name: productName,
+          category: category,
+          price: ratePrice,
+          qty: rateQty,
+          unit: rateUnit
+        }}
+      />
     </div>
   );
 }
-
-

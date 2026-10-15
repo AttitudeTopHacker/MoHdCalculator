@@ -1,7 +1,7 @@
 {
   "name": "mohd-calculator-root",
   "private": true,
-  "version": "1.03.0",
+  "version": "1.03.1",
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "dev:app": "npm --prefix app run dev",

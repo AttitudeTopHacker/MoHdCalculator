@@ -114,6 +114,7 @@ export default function Dashboard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [calcChooserOpen, setCalcChooserOpen] = useState(false);
   const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -510,7 +511,13 @@ export default function Dashboard() {
                 <div 
                   key={tool.id} 
                   className="tool-card" 
-                  onClick={() => navigate(tool.path)}
+                  onClick={() => {
+                    if (tool.id === 'calculator') {
+                      setCalcChooserOpen(true);
+                    } else {
+                      navigate(tool.path);
+                    }
+                  }}
                   style={{ '--tool-glow-color': tool.color }}
                 >
                   <div className="tool-card-glow" />
@@ -531,6 +538,87 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+
+      {/* ── Calculator Category Chooser Modal ─────────────────── */}
+      {calcChooserOpen && (
+        <div className="modal-overlay" onClick={() => setCalcChooserOpen(false)}>
+          <div className="modal-card calc-chooser-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="calc-chooser-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '1.6rem' }}>🧮</span>
+                <div>
+                  <h2 className="modal-title" style={{ fontSize: '1.2rem', margin: 0 }}>Select Calculator</h2>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                    Choose a category to start calculating:
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                className="notice-close" 
+                onClick={() => setCalcChooserOpen(false)}
+                style={{ fontSize: '1.3rem', padding: '4px 8px', cursor: 'pointer' }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="calc-chooser-options">
+              {/* Option 1: Weight */}
+              <div 
+                className="calc-option-card"
+                onClick={() => {
+                  setCalcChooserOpen(false);
+                  navigate('/dashboard/calculator?category=weight');
+                }}
+              >
+                <div className="calc-option-icon">⚖️</div>
+                <div className="calc-option-content">
+                  <div className="calc-option-title">Weight Calculator</div>
+                  <div className="calc-option-desc">Kilogram (kg), Gram (g), Milligram (mg), Quintal</div>
+                  <div className="calc-option-tag">Grocery, Farm Produce, Cement & Iron</div>
+                </div>
+                <div className="calc-option-arrow">➔</div>
+              </div>
+
+              {/* Option 2: Liquid / Volume */}
+              <div 
+                className="calc-option-card"
+                onClick={() => {
+                  setCalcChooserOpen(false);
+                  navigate('/dashboard/calculator?category=liquid');
+                }}
+              >
+                <div className="calc-option-icon">🥛</div>
+                <div className="calc-option-content">
+                  <div className="calc-option-title">Liquid / Volume Calculator</div>
+                  <div className="calc-option-desc">Litre (L), Millilitre (ml)</div>
+                  <div className="calc-option-tag">Milk, Edible Oil, Paint & Chemicals</div>
+                </div>
+                <div className="calc-option-arrow">➔</div>
+              </div>
+
+              {/* Option 3: Counting */}
+              <div 
+                className="calc-option-card"
+                onClick={() => {
+                  setCalcChooserOpen(false);
+                  navigate('/dashboard/calculator?category=count');
+                }}
+              >
+                <div className="calc-option-icon">🧱</div>
+                <div className="calc-option-content">
+                  <div className="calc-option-title">Counting & Units Calculator</div>
+                  <div className="calc-option-desc">Bricks, Pieces (Pcs), Dozen (12), Bags</div>
+                  <div className="calc-option-tag">Bricks, Floor Tiles, Sacks & Items</div>
+                </div>
+                <div className="calc-option-arrow">➔</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Edit Profile Modal ────────────────────────────────── */}
       {modalOpen && (

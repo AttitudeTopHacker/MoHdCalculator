@@ -719,3 +719,112 @@
   }
 }
 
+/* ── Calculator Category Chooser Modal ────────────────────────────── */
+.calc-chooser-modal {
+  max-width: 490px !important;
+  border: 1px solid rgba(46, 230, 197, 0.45) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(46, 230, 197, 0.18) !important;
+}
+
+.calc-chooser-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.calc-chooser-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calc-option-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.calc-option-card:hover {
+  background: rgba(46, 230, 197, 0.08);
+  border-color: var(--teal);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 230, 197, 0.22);
+}
+
+.calc-option-card:active {
+  transform: scale(0.98);
+}
+
+.calc-option-icon {
+  font-size: 1.8rem;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(46, 230, 197, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.calc-option-content {
+  flex: 1;
+}
+
+.calc-option-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.calc-option-desc {
+  font-size: 0.76rem;
+  color: var(--teal);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.calc-option-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.calc-option-arrow {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  transition: transform 0.2s, color 0.2s;
+}
+
+.calc-option-card:hover .calc-option-arrow {
+  color: var(--teal);
+  transform: translateX(4px);
+}
+
+@media (max-width: 600px) {
+  .calc-chooser-modal {
+    padding: 22px 16px !important;
+  }
+  .calc-option-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .calc-option-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+  .calc-option-title {
+    font-size: 0.9rem;
+  }
+}
+
+
