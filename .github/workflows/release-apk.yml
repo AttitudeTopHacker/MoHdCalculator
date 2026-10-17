@@ -35,6 +35,10 @@ jobs:
           npm --prefix app install
 
       - name: Build Web Assets & Sync Capacitor
+        env:
+          VITE_API_BASE_URL: https://areacalculator-backend.onrender.com/api/v1
+          VITE_GOOGLE_MAPS_API_KEY: AIzaSyClB9SnmtJsjyxF9wrigJYtI4dV6zDj7yk
+          VITE_GOOGLE_CLIENT_ID: 171584455552-8nqhjcm8lfn3u2otme8nrhv7n7ndv6af.apps.googleusercontent.com
         run: |
           npm --prefix app run build
           cd app && npx cap sync android

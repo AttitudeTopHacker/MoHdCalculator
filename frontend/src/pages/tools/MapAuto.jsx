@@ -42,7 +42,7 @@ export default function MapAuto() {
       callback();
       return;
     }
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyClB9SnmtJsjyxF9wrigJYtI4dV6zDj7yk';
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
     script.async = true;

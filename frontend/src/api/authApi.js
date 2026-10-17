@@ -1,13 +1,22 @@
 import axios from 'axios';
 import { showToast } from '../utils/toast';
 
+const PROD_API_BASE_URL = 'https://areacalculator-backend.onrender.com/api/v1';
+
 const getDynamicBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) return envUrl;
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl;
+  }
   
-  // Fallback to dynamic host matching port 8080 in dev
-  const { protocol, hostname } = window.location;
-  return `${protocol}//${hostname}:8080/api/v1`;
+  const { protocol, hostname, port } = window.location;
+  const isLocalDevBrowser = (hostname === 'localhost' || hostname === '127.0.0.1');
+  
+  if (isLocalDevBrowser) {
+    return envUrl || `${protocol}//${hostname}:8080/api/v1`;
+  }
+  
+  return PROD_API_BASE_URL;
 };
 
 const BASE_URL = getDynamicBaseUrl();
