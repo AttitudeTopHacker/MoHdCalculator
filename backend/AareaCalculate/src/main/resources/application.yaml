@@ -53,6 +53,9 @@ jwt:
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:4151}
   admin-emails: ${ADMIN_EMAILS:mohdsalman4151@gmail.com}
+  github:
+    username: ${GITHUB_USERNAME:AttitudeTopHacker}
+    token: ${GITHUB_TOKEN:}
 
 # ── Server ───────────────────────────────────────────────────────────────────
 server:

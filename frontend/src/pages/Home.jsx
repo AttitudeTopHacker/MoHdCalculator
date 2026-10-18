@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { adminApi } from '../api/adminApi';
 import SlidingBackground from '../components/SlidingBackground';
 import ConfirmModal from '../components/ConfirmModal';
+import GitHubProfileCard from '../components/GitHubProfileCard';
 import useWakeup from '../utils/useWakeup';
 import './Home.css';
 
@@ -133,7 +134,13 @@ export default function Home() {
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="hero">
-        <div className="hero-badge">✦ Instant · Secure · Cloud-Synced</div>
+        <div className="hero-badges-row">
+          <div className="hero-badge">✦ Instant · Secure · Cloud-Synced</div>
+          <div className="org-shimmer-badge" title="msm.movin 2022 ORG">
+            <span className="org-shimmer-dot" />
+            <span className="org-shimmer-text">msm.movin 2022 ORG</span>
+          </div>
+        </div>
 
         <h1 className="hero-heading">
           Measure
@@ -251,6 +258,15 @@ export default function Home() {
         </section>
       )}
 
+      {/* ── Creator Showcase Section ──────────────────────────── */}
+      <section className="creator-section">
+        <div className="creator-section-header">
+          <span className="creator-subtitle">Innovator & Architect</span>
+          <h2 className="creator-heading">Meet the <span className="text-teal">Creator</span></h2>
+        </div>
+        <GitHubProfileCard variant="showcase" />
+      </section>
+
       {/* ── CTA Banner ───────────────────────────────────────── */}
       <section className="cta-banner">
         <div className="cta-banner-inner">
@@ -276,20 +292,58 @@ export default function Home() {
 
       {/* ── Footer ───────────────────────────────────────────── */}
       <footer className="home-footer">
-        <span className="footer-logo">◈ AreaCalculator</span>
-        <span className="footer-copy">
-          Built by <strong style={{ color: 'var(--teal)' }}>Salman Ansari</strong> · 2026
-        </span>
-        <div className="footer-links">
-          <Link to="/about" className="footer-link">About</Link>
-          {isAuthenticated ? (
-            <Link to="/dashboard" className="footer-link">Dashboard</Link>
-          ) : (
-            <>
-              <Link to="/login"  className="footer-link">Login</Link>
-              <Link to="/signup" className="footer-link">Sign Up</Link>
-            </>
-          )}
+        <div className="footer-top-grid">
+          {/* Org & Brand Info */}
+          <div className="footer-brand-col">
+            <div className="footer-org-header">
+              <span className="footer-logo">◈ AreaCalculator</span>
+              <div className="org-shimmer-badge" title="msm.movin 2022 ORG">
+                <span className="org-shimmer-dot" />
+                <span className="org-shimmer-text">msm.movin 2022 ORG</span>
+              </div>
+            </div>
+            <p className="footer-org-desc">
+              <strong>msm.movin 2022 ORG</strong> is a dedicated software development company founded and led by{' '}
+              <span className="footer-owner-highlight">Mohd Salman Ansari</span>. We specialize in engineering high-performance websites & cloud web apps, cross-platform Android (APK) applications, native desktop software for Windows & Linux, and custom browser extensions.
+            </p>
+          </div>
+
+          {/* Capabilities / Services */}
+          <div className="footer-services-col">
+            <h4 className="footer-col-title">What We Build</h4>
+            <ul className="footer-services-list">
+              <li><span className="service-icon">🌐</span> Websites & Cloud Web Apps</li>
+              <li><span className="service-icon">📱</span> Android Applications & APKs</li>
+              <li><span className="service-icon">💻</span> Windows & Linux Software</li>
+              <li><span className="service-icon">🧩</span> Browser Extensions & Toolkits</li>
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div className="footer-links-col">
+            <h4 className="footer-col-title">Quick Links</h4>
+            <div className="footer-nav-list">
+              <Link to="/about" className="footer-link">About Organization</Link>
+              {isAuthenticated ? (
+                <Link to="/dashboard" className="footer-link">Calculator Dashboard</Link>
+              ) : (
+                <>
+                  <Link to="/login" className="footer-link">Sign In</Link>
+                  <Link to="/signup" className="footer-link">Create Free Account</Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Copyright Bar */}
+        <div className="footer-bottom-bar">
+          <div className="footer-copyright-text">
+            © 2022 – 2026 <strong className="text-teal">msm.movin 2022 ORG</strong>. All rights reserved.
+          </div>
+          <div className="footer-owner-tag">
+            Founded & Owned by <strong className="text-teal">Mohd Salman Ansari</strong>
+          </div>
         </div>
       </footer>
 

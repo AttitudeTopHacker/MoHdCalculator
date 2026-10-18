@@ -18,4 +18,7 @@ export const adminApi = {
 
   publicGetTeam: () =>
     api.get('/public/team'),
+
+  publicGetGitHubStats: () =>
+    api.get('/public/github-stats'),
 };

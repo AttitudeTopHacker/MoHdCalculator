@@ -18,6 +18,7 @@ import java.util.List;
 public class PublicController {
 
     private final TeamMemberRepository teamMemberRepository;
+    private final mohd.salman.ansari.service.GitHubStatsService gitHubStatsService;
 
     @GetMapping("/team")
     public ApiResponse<List<TeamMember>> getTeamMembers() {
@@ -25,6 +26,14 @@ public class PublicController {
         List<TeamMember> team = teamMemberRepository.findAll();
         return ApiResponse.success("Team list fetched successfully.", team);
     }
+
+    @GetMapping("/github-stats")
+    public ApiResponse<mohd.salman.ansari.dto.GitHubStatsDto> getGitHubStats() {
+        log.info("Public request to fetch unified GitHub stats.");
+        mohd.salman.ansari.dto.GitHubStatsDto stats = gitHubStatsService.getStats();
+        return ApiResponse.success("GitHub stats fetched successfully.", stats);
+    }
+
     @GetMapping("/health")
     public String health() {
         return "OK";

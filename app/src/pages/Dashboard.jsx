@@ -386,7 +386,13 @@ export default function Dashboard() {
 
       {/* ── Main Dashboard ────────────────────────────────────── */}
       <main className="dashboard-main">
-        <div className="welcome-badge">Phase 1 & 2 Complete ✓</div>
+        <div className="dashboard-badges-row">
+          <div className="welcome-badge">Phase 1 & 2 Complete ✓</div>
+          <div className="org-shimmer-badge" title="msm.movin 2022 ORG">
+            <span className="org-shimmer-dot" />
+            <span className="org-shimmer-text">msm.movin 2022 ORG</span>
+          </div>
+        </div>
         <h1 className="dashboard-heading">
           Welcome, <span style={{ color: 'var(--teal)' }}>{user.fullName || user.email}</span>!
         </h1>

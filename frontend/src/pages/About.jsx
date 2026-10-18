@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import WaveBackground from '../components/WaveBackground';
+import GitHubProfileCard from '../components/GitHubProfileCard';
 import './About.css';
 
 export default function About() {
@@ -51,6 +52,11 @@ export default function About() {
                 <div className="tech-badge">Spring Security</div>
                 <div className="tech-badge">Vite</div>
               </div>
+            </section>
+
+            <section className="about-section">
+              <h3>👨💻 Founder & Lead Architect</h3>
+              <GitHubProfileCard variant="full" />
             </section>
           </div>
 
