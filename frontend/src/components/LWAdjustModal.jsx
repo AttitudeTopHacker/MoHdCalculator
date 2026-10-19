@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import './LWAdjustModal.css';
 
 /**
- * LWAdjustModal — Target Area Auto-Fit / Reverse Plot Adjuster
+ * LWAdjustModal — Full-Screen Target Area Auto-Fit / Reverse Plot Adjuster
  *
  * Allows users to lock fixed sides and input a Target Area (Acre, Bigha, Biswa, Biswanshi).
  * The unlocked sides are automatically adjusted to achieve the exact target area.
- * Supports Gatta (configurable inch scale), Foot, and Meter with live multi-unit conversion.
+ * Full screen UI. Does NOT close on outside click. Only closes via explicit Close button or Apply.
  */
 export default function LWAdjustModal({
   isOpen,
@@ -45,7 +45,7 @@ export default function LWAdjustModal({
   const [targetBiswa, setTargetBiswa] = useState('0');
   const [targetBiswansi, setTargetBiswansi] = useState('0');
 
-  // Sync state whenever modal is opened
+  // Sync state whenever modal is opened & handle browser back button
   useEffect(() => {
     if (isOpen) {
       setActiveUnit(unit || 'gatta');
@@ -76,11 +76,21 @@ export default function LWAdjustModal({
       } else {
         setLocked({ east: true, west: true, north: false, south: false });
       }
+
+      // Prevent accidental page navigation when user presses browser/mobile back:
+      window.history.pushState({ lwModal: true }, '');
+      const handlePopState = () => {
+        onClose();
+      };
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
     }
-  }, [isOpen, initialEast, initialWest, initialNorth, initialSouth, initialBreakdown, unit]);
+  }, [isOpen, initialEast, initialWest, initialNorth, initialSouth, initialBreakdown, unit, onClose]);
 
   // Unit conversion helper
-  const convertUnit = (val, from, to) => {
+  const convertUnit = useCallback((val, from, to) => {
     const num = parseFloat(val);
     if (isNaN(num)) return 0;
     const gattaFactor = (gattaScale || 99.0) * 0.0254;
@@ -92,7 +102,7 @@ export default function LWAdjustModal({
     };
     const meters = num * localFactors[from];
     return meters / localFactors[to];
-  };
+  }, [gattaScale]);
 
   // Convert entered inputs when user changes unit inside modal
   const handleUnitChange = (newUnit) => {
@@ -233,7 +243,7 @@ export default function LWAdjustModal({
       summaryText,
       totalTargetSqGatta
     };
-  }, [east, west, north, south, locked, targetAcre, targetBigha, targetBiswa, targetBiswansi, activeUnit, bighaScale, biswaScale, gattaScale]);
+  }, [east, west, north, south, locked, targetAcre, targetBigha, targetBiswa, targetBiswansi, activeUnit, bighaScale, biswaScale, convertUnit]);
 
   if (!isOpen) return null;
 
@@ -266,25 +276,37 @@ export default function LWAdjustModal({
   };
 
   return (
-    <div className="lw-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="lw-modal-container" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="lw-modal-header">
+    <div className="lw-modal-overlay" role="dialog" aria-modal="true">
+      <div className="lw-modal-container">
+        {/* Full Screen Header */}
+        <header className="lw-modal-header">
           <div className="lw-modal-title-group">
             <span className="lw-modal-icon-badge">📐</span>
             <div>
               <h2 className="lw-modal-title">Adjust Length × Width (Auto-Fit)</h2>
-              <p className="lw-modal-subtitle">Lock fixed sides and enter Target Area to auto-fit remaining side</p>
+              <p className="lw-modal-subtitle">Lock fixed sides and enter Target Area to auto-calculate remaining dimensions</p>
             </div>
           </div>
-          <button className="lw-modal-close-btn" onClick={onClose} aria-label="Close modal">✕</button>
-        </div>
+          <button className="lw-modal-close-btn" onClick={onClose} aria-label="Close">
+            <span>✕ Close</span>
+          </button>
+        </header>
 
-        {/* Modal Body */}
-        <div className="lw-modal-body">
-          {/* Unit Selector Row (Gatta / Foot / Meter) */}
-          <div className="lw-unit-selector-row">
-            <span className="lw-unit-label">📏 Boundary Unit:</span>
+        {/* Full Screen Body Content */}
+        <main className="lw-modal-body">
+          {/* Reference Scale Banner */}
+          <div className="lw-ref-banner">
+            <span className="lw-ref-label">💡 Reference Scale:</span>
+            <span className="lw-ref-value">
+              1 Acre = {bighaScale} Bigha · 1 Bigha = {biswaScale} Biswa · 1 Gatta = {gattaScale} in
+            </span>
+          </div>
+
+          {/* Unit Selector Card */}
+          <div className="lw-unit-selector-card">
+            <span className="lw-unit-card-title">
+              <span>📏</span> Choose Measurement Unit:
+            </span>
             <div className="lw-unit-radio-group">
               <label className={`lw-unit-pill ${activeUnit === 'gatta' ? 'active' : ''}`}>
                 <input
@@ -322,7 +344,7 @@ export default function LWAdjustModal({
           </div>
 
           {/* Quick Mode Preset Buttons */}
-          <div className="lw-quick-modes">
+          <div className="lw-quick-modes-card">
             <button
               type="button"
               className={`lw-mode-pill ${locked.east && locked.west && !locked.north && !locked.south ? 'active' : ''}`}
@@ -330,7 +352,7 @@ export default function LWAdjustModal({
             >
               <span>🔒 Lock Width (East/West)</span>
               <span>➔</span>
-              <span>⚡ Auto Length</span>
+              <span>⚡ Auto Length (North/South)</span>
             </button>
             <button
               type="button"
@@ -339,7 +361,7 @@ export default function LWAdjustModal({
             >
               <span>🔒 Lock Length (North/South)</span>
               <span>➔</span>
-              <span>⚡ Auto Width</span>
+              <span>⚡ Auto Width (East/West)</span>
             </button>
           </div>
 
@@ -347,7 +369,7 @@ export default function LWAdjustModal({
           <div>
             <div className="lw-section-header">
               <span className="lw-section-title">
-                <span>🧭</span> Plot Boundaries & Locks
+                <span>🧭</span> Plot Boundaries & Side Locks
               </span>
               <span className="lw-unit-tag">{activeUnit}</span>
             </div>
@@ -364,7 +386,7 @@ export default function LWAdjustModal({
                       onChange={(e) => setLocked((prev) => ({ ...prev, east: e.target.checked }))}
                     />
                     <span className={`lw-side-status-tag ${locked.east ? 'locked' : 'auto'}`}>
-                      {locked.east ? '🔒 Fixed' : '⚡ Auto'}
+                      {locked.east ? '🔒 Fixed (Lock)' : '⚡ Auto-Fit'}
                     </span>
                   </label>
                 </div>
@@ -393,7 +415,7 @@ export default function LWAdjustModal({
                       onChange={(e) => setLocked((prev) => ({ ...prev, west: e.target.checked }))}
                     />
                     <span className={`lw-side-status-tag ${locked.west ? 'locked' : 'auto'}`}>
-                      {locked.west ? '🔒 Fixed' : '⚡ Auto'}
+                      {locked.west ? '🔒 Fixed (Lock)' : '⚡ Auto-Fit'}
                     </span>
                   </label>
                 </div>
@@ -422,7 +444,7 @@ export default function LWAdjustModal({
                       onChange={(e) => setLocked((prev) => ({ ...prev, north: e.target.checked }))}
                     />
                     <span className={`lw-side-status-tag ${locked.north ? 'locked' : 'auto'}`}>
-                      {locked.north ? '🔒 Fixed' : '⚡ Auto'}
+                      {locked.north ? '🔒 Fixed (Lock)' : '⚡ Auto-Fit'}
                     </span>
                   </label>
                 </div>
@@ -451,7 +473,7 @@ export default function LWAdjustModal({
                       onChange={(e) => setLocked((prev) => ({ ...prev, south: e.target.checked }))}
                     />
                     <span className={`lw-side-status-tag ${locked.south ? 'locked' : 'auto'}`}>
-                      {locked.south ? '🔒 Fixed' : '⚡ Auto'}
+                      {locked.south ? '🔒 Fixed (Lock)' : '⚡ Auto-Fit'}
                     </span>
                   </label>
                 </div>
@@ -472,12 +494,12 @@ export default function LWAdjustModal({
           </div>
 
           {/* Section 2: Target Area Inputs */}
-          <div className="lw-target-area-box">
+          <div className="lw-target-area-card">
             <div className="lw-section-header">
               <span className="lw-section-title">
                 <span>🎯</span> Desired Target Area
               </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Edit directly</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Edit directly</span>
             </div>
 
             <div className="lw-area-grid">
@@ -553,22 +575,24 @@ export default function LWAdjustModal({
               ⚠️ {calcResult.error}
             </div>
           )}
-        </div>
+        </main>
 
-        {/* Footer Actions */}
-        <div className="lw-modal-footer">
-          <button type="button" className="lw-btn-cancel" onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="lw-btn-apply"
-            disabled={Boolean(calcResult.error)}
-            onClick={handleApply}
-          >
-            <span>✓ Apply to Form & Result</span>
-          </button>
-        </div>
+        {/* Fixed Bottom Action Bar */}
+        <footer className="lw-modal-footer">
+          <div className="lw-footer-inner">
+            <button type="button" className="lw-btn-cancel" onClick={onClose}>
+              <span>✕ Close</span>
+            </button>
+            <button
+              type="button"
+              className="lw-btn-apply"
+              disabled={Boolean(calcResult.error)}
+              onClick={handleApply}
+            >
+              <span>✓ Apply & Get Result</span>
+            </button>
+          </div>
+        </footer>
       </div>
     </div>
   );
