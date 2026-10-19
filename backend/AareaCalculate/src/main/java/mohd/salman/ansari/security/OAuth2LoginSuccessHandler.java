@@ -43,14 +43,28 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String jwt = jwtUtil.generateToken(email);
 
-        // Check if authentication request originated from mobile app
+        // Check if authentication request originated from mobile app or local dev
         String state = request.getParameter("state");
-        boolean isMobile = state != null && state.endsWith("_mobile");
+        boolean isMobile = state != null && state.contains("_mobile");
+        boolean isLocal = state != null && state.contains("_local");
 
         // Redirect frontend — token is read from URL and stored in localStorage
         String redirectUrl;
         if (isMobile) {
             redirectUrl = "com.msmmovin.areacalculator://oauth2/callback?token=" + jwt;
+        } else if (isLocal) {
+            // Extract local port from state (e.g., _local_5173)
+            String localPort = "5173";
+            int idx = state.indexOf("_local_");
+            if (idx != -1) {
+                String sub = state.substring(idx + 7);
+                // Extract digits only if appended with further state
+                String digits = sub.replaceAll("[^0-9].*$", "");
+                if (!digits.isEmpty()) {
+                    localPort = digits;
+                }
+            }
+            redirectUrl = "http://localhost:" + localPort + "/oauth2/callback?token=" + jwt;
         } else {
             redirectUrl = frontendUrl + "/oauth2/callback?token=" + jwt;
         }

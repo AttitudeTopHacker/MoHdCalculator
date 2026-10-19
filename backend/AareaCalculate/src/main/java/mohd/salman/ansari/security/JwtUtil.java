@@ -39,17 +39,11 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    /** Generate a JWT for the given email (subject). If jwtExpirationMs <= 0, token never expires */
+    /** Generate a JWT for the given email (subject). Tokens are permanent and never expire */
     public String generateToken(String email) {
-        JwtBuilder builder = Jwts.builder()
+        return Jwts.builder()
                 .subject(email)
-                .issuedAt(new Date());
-
-        if (jwtExpirationMs > 0) {
-            builder.expiration(new Date(System.currentTimeMillis() + jwtExpirationMs));
-        }
-
-        return builder
+                .issuedAt(new Date())
                 .signWith(getSigningKey())
                 .compact();
     }

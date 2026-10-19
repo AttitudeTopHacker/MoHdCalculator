@@ -152,9 +152,9 @@ public class SecurityConfig {
             private OAuth2AuthorizationRequest customizeState(OAuth2AuthorizationRequest authRequest, HttpServletRequest request) {
                 if (authRequest == null) return null;
                 String platform = request.getParameter("platform");
-                if ("mobile".equals(platform)) {
+                if (platform != null && !platform.trim().isEmpty()) {
                     String originalState = authRequest.getState();
-                    String newState = originalState + "_mobile";
+                    String newState = originalState + "_" + platform.trim();
                     return OAuth2AuthorizationRequest.from(authRequest)
                             .state(newState)
                             .build();

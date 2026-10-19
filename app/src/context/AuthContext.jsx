@@ -9,21 +9,17 @@ const USER_KEY  = 'ac_user';
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => {
-    const saved = localStorage.getItem(TOKEN_KEY);
-    if (saved && isTokenExpired(saved)) {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      return null;
-    }
-    return saved;
+    return localStorage.getItem(TOKEN_KEY) || null;
   });
   const [user, setUser] = useState(() => {
     const savedToken = localStorage.getItem(TOKEN_KEY);
-    if (!savedToken || isTokenExpired(savedToken)) {
+    if (!savedToken) return null;
+    try {
+      const saved = localStorage.getItem(USER_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
       return null;
     }
-    const saved = localStorage.getItem(USER_KEY);
-    return saved ? JSON.parse(saved) : null;
   });
 
   /** Store token + user in state and localStorage */

@@ -5,22 +5,19 @@ import { isTokenExpired } from '../utils/token';
 const PROD_API_BASE_URL = 'https://areacalculator-backend.onrender.com/api/v1';
 
 const getDynamicBaseUrl = () => {
+  // If explicitly requested to use local Spring Boot backend on port 8080:
+  if (import.meta.env.VITE_USE_LOCAL_BACKEND === 'true') {
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:8080/api/v1`;
+  }
+  
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  // If explicitly configured with a remote URL, use it
-  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+  // If envUrl is provided and is NOT localhost:8080, use it:
+  if (envUrl && !envUrl.includes('localhost:8080') && !envUrl.includes('127.0.0.1:8080')) {
     return envUrl;
   }
   
-  // Only connect to localhost if running in local browser Vite dev server (e.g. port 5173 / 3000)
-  // Capacitor Android WebView runs on http://localhost where port 8080 does not exist
-  const { protocol, hostname, port } = window.location;
-  const isLocalDevBrowser = (hostname === 'localhost' || hostname === '127.0.0.1') && (port === '5173' || port === '3000');
-  
-  if (isLocalDevBrowser) {
-    return envUrl || `${protocol}//${hostname}:8080/api/v1`;
-  }
-  
-  // Mobile app (Capacitor) or production fallback: ALWAYS use production cloud backend
+  // Default to live Render backend for both localhost dev & production
   return PROD_API_BASE_URL;
 };
 
@@ -35,12 +32,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('ac_token');
   if (token) {
-    if (isTokenExpired(token)) {
-      localStorage.removeItem('ac_token');
-      localStorage.removeItem('ac_user');
-    } else {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -160,7 +152,10 @@ export const authApi = {
 // Redirects browser to Spring Security's OAuth2 authorization page.
 export const triggerGoogleLogin = () => {
   const backendBase = BASE_URL.replace('/api/v1', '');
-  window.location.href = `${backendBase}/login/oauth2/google`;
+  const { hostname, port } = window.location;
+  const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+  const param = isLocal ? `?platform=local_${port || '5173'}` : '';
+  window.location.href = `${backendBase}/login/oauth2/google${param}`;
 };
 
 export default api;
