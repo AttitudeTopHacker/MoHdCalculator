@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import InputField from '../../components/InputField';
+import LWAdjustModal from '../../components/LWAdjustModal';
 import { getLengthBreadthBreakdown, getBighaBreakdown, getGattaInch, getBighaPerAcre, getBiswaPerBigha } from '../../utils/localCalculator';
 import { queueHistory } from '../../utils/historySync';
 import CalculatorSettings from '../../components/CalculatorSettings';
@@ -13,6 +14,16 @@ export default function RectangleArea() {
   const [north, setNorth] = useState('');
   const [south, setSouth] = useState('');
   const [calculatorUnit, setCalculatorUnit] = useState('gatta'); // 'gatta' | 'foot' | 'meter'
+
+  // Lock status and L*W Adjust state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lockedSides, setLockedSides] = useState({
+    east: false,
+    west: false,
+    north: false,
+    south: false
+  });
+  const [isAdjusted, setIsAdjusted] = useState(false);
 
   // Output states
   const [breakdown, setBreakdown] = useState(null);
@@ -150,6 +161,31 @@ export default function RectangleArea() {
     setBreakdown(null);
     setVisualizerData(null);
     setError('');
+    setLockedSides({ east: false, west: false, north: false, south: false });
+    setIsAdjusted(false);
+  };
+
+  const handleApplyAdjust = ({ east: adjEast, west: adjWest, north: adjNorth, south: adjSouth, lockedSides: adjLocked, breakdown: adjBreakdown, unit: adjUnit }) => {
+    if (adjUnit) {
+      setCalculatorUnit(adjUnit);
+    }
+    setEast(adjEast);
+    setWest(adjWest);
+    setNorth(adjNorth);
+    setSouth(adjSouth);
+    setLockedSides(adjLocked);
+    setIsAdjusted(true);
+    setBreakdown(adjBreakdown);
+    setError('');
+
+    const activeU = adjUnit || calculatorUnit;
+
+    // Sync calculation history
+    queueHistory(
+      'Area Rectangle (Adjusted L×W)',
+      `East: ${adjEast} ${activeU}, West: ${adjWest} ${activeU}, North: ${adjNorth} ${activeU}, South: ${adjSouth} ${activeU}`,
+      `Target Breakdown: ${adjBreakdown.acre} Acre, ${adjBreakdown.bigha} Bigha, ${adjBreakdown.biswa} Biswa, ${adjBreakdown.biswansi} Biswansi`
+    );
   };
 
   return (
@@ -244,7 +280,22 @@ export default function RectangleArea() {
             /* CALCULATOR INPUT FORM */
             <form onSubmit={handleCalculate}>
               <div className="triangle-header-container">
-                <span className="status-badge functional">Averaging Boundaries</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span className="status-badge functional">Averaging Boundaries</span>
+                  {(Object.values(lockedSides).some(Boolean) || isAdjusted) && (
+                    <button
+                      type="button"
+                      className="unlock-all-btn"
+                      onClick={() => {
+                        setLockedSides({ east: false, west: false, north: false, south: false });
+                        setIsAdjusted(false);
+                      }}
+                      title="Unlock all fields for manual editing"
+                    >
+                      🔓 Unlock All Fields
+                    </button>
+                  )}
+                </div>
                 
                 {/* Unit Radio Selector */}
                 <div className="triangle-radio-group">
@@ -289,7 +340,11 @@ export default function RectangleArea() {
               {/* Form Input fields */}
               <div className="tool-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '20px' }}>
                 <div className="form-field-group">
-                  <label className="field-label" htmlFor="east-len">Enter Length of East</label>
+                  <label className="field-label" htmlFor="east-len">
+                    Enter Length of East
+                    {lockedSides.east && <span className="side-status-badge fixed">🔒 Fixed</span>}
+                    {!lockedSides.east && isAdjusted && <span className="side-status-badge auto">⚡ Auto-Fit</span>}
+                  </label>
                   <div className="field-input-wrapper">
                     <InputField
                       id="east-len"
@@ -298,6 +353,7 @@ export default function RectangleArea() {
                       step="any"
                       placeholder="0.00"
                       value={east}
+                      readOnly={Boolean(lockedSides.east)}
                       onChange={(e) => { setEast(e.target.value); setBreakdown(null); }}
                       icon="🧭"
                     />
@@ -306,7 +362,11 @@ export default function RectangleArea() {
                 </div>
 
                 <div className="form-field-group">
-                  <label className="field-label" htmlFor="west-len">Enter Length of West</label>
+                  <label className="field-label" htmlFor="west-len">
+                    Enter Length of West
+                    {lockedSides.west && <span className="side-status-badge fixed">🔒 Fixed</span>}
+                    {!lockedSides.west && isAdjusted && <span className="side-status-badge auto">⚡ Auto-Fit</span>}
+                  </label>
                   <div className="field-input-wrapper">
                     <InputField
                       id="west-len"
@@ -315,6 +375,7 @@ export default function RectangleArea() {
                       step="any"
                       placeholder="0.00"
                       value={west}
+                      readOnly={Boolean(lockedSides.west)}
                       onChange={(e) => { setWest(e.target.value); setBreakdown(null); }}
                       icon="🧭"
                     />
@@ -323,7 +384,11 @@ export default function RectangleArea() {
                 </div>
 
                 <div className="form-field-group">
-                  <label className="field-label" htmlFor="north-len">Enter Length of North</label>
+                  <label className="field-label" htmlFor="north-len">
+                    Enter Length of North
+                    {lockedSides.north && <span className="side-status-badge fixed">🔒 Fixed</span>}
+                    {!lockedSides.north && isAdjusted && <span className="side-status-badge auto">⚡ Auto-Fit</span>}
+                  </label>
                   <div className="field-input-wrapper">
                     <InputField
                       id="north-len"
@@ -332,6 +397,7 @@ export default function RectangleArea() {
                       step="any"
                       placeholder="0.00"
                       value={north}
+                      readOnly={Boolean(lockedSides.north)}
                       onChange={(e) => { setNorth(e.target.value); setBreakdown(null); }}
                       icon="🧭"
                     />
@@ -340,7 +406,11 @@ export default function RectangleArea() {
                 </div>
 
                 <div className="form-field-group">
-                  <label className="field-label" htmlFor="south-len">Enter Length of South</label>
+                  <label className="field-label" htmlFor="south-len">
+                    Enter Length of South
+                    {lockedSides.south && <span className="side-status-badge fixed">🔒 Fixed</span>}
+                    {!lockedSides.south && isAdjusted && <span className="side-status-badge auto">⚡ Auto-Fit</span>}
+                  </label>
                   <div className="field-input-wrapper">
                     <InputField
                       id="south-len"
@@ -349,6 +419,7 @@ export default function RectangleArea() {
                       step="any"
                       placeholder="0.00"
                       value={south}
+                      readOnly={Boolean(lockedSides.south)}
                       onChange={(e) => { setSouth(e.target.value); setBreakdown(null); }}
                       icon="🧭"
                     />
@@ -368,15 +439,29 @@ export default function RectangleArea() {
                 <button type="submit" className="tool-btn-primary" disabled={loading} style={{ flex: 2 }}>
                   {loading ? 'Calculating...' : 'Get Result'}
                 </button>
-                <button type="button" className="tool-btn-secondary" onClick={handleOpenVisualizer} style={{ flex: 2 }}>
-                  🧭 Convert & Visualize
+                <button 
+                  type="button" 
+                  className="tool-btn-secondary" 
+                  onClick={() => setIsModalOpen(true)} 
+                  style={{ 
+                    flex: 2,
+                    borderColor: 'var(--teal)',
+                    color: 'var(--teal)',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  📐 L*W Adjust
                 </button>
                 <button 
                   type="button" 
                   className="tool-btn-secondary" 
                   onClick={handleClear}
                   style={{ flex: 1 }}
-                  disabled={!east && !west && !north && !south && !breakdown}
+                  disabled={!east && !west && !north && !south && !breakdown && !isAdjusted}
                 >
                   Clear
                 </button>
@@ -517,6 +602,22 @@ export default function RectangleArea() {
             </div>
           )}
         </div>
+
+        {/* L*W Adjust Target Area Auto-Fit Modal */}
+        <LWAdjustModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          initialEast={east}
+          initialWest={west}
+          initialNorth={north}
+          initialSouth={south}
+          unit={calculatorUnit}
+          bighaScale={bighaScale}
+          biswaScale={biswaScale}
+          gattaScale={gattaScale}
+          initialBreakdown={breakdown}
+          onApply={handleApplyAdjust}
+        />
       </main>
     </div>
   );
