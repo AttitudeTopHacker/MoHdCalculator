@@ -22,9 +22,11 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -58,6 +60,11 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+            // Exception handling — return 401 Unauthorized for unauthenticated requests instead of 302 redirecting to OAuth2
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            )
+
             // Route permissions
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -70,7 +77,8 @@ public class SecurityConfig {
                     "/api/v1/auth/reset-password",
                     "/login/oauth2/**",
                     "/oauth2/**",
-                    "/api/v1/public/**"
+                    "/api/v1/public/**",
+                    "/error"
                 ).permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

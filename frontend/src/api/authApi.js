@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { showToast } from '../utils/toast';
+import { isTokenExpired } from '../utils/token';
 
 const PROD_API_BASE_URL = 'https://areacalculator-backend.onrender.com/api/v1';
 
@@ -30,7 +31,12 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('ac_token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('ac_token');
+      localStorage.removeItem('ac_user');
+    } else {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -47,19 +53,25 @@ api.interceptors.response.use(
     const isSilent = SILENT_URLS.some((s) => url.includes(s));
     if (isSilent) return Promise.reject(error);
 
-    // ── Case 1: No internet / network down ──────────────────────────────────
-    if (!navigator.onLine || error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+    // ── Case 1: Device offline (No internet) ─────────────────────────────────
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
       showToast('📶 Internet connection nahi hai. Please check karein.', 'error', 5000);
       return Promise.reject(error);
     }
 
-    // ── Case 2: Request timeout ──────────────────────────────────────────────
+    // ── Case 2: Network error / Server unreachable ───────────────────────────
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      showToast('⚠️ Server se connect nahi ho pa raha. Thodi der baad try karein.', 'error', 5000);
+      return Promise.reject(error);
+    }
+
+    // ── Case 3: Request timeout ──────────────────────────────────────────────
     if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
       showToast('⏱ Server respond nahi kar raha. Thodi der baad try karein.', 'error', 5000);
       return Promise.reject(error);
     }
 
-    // ── Case 3: Server responded with error ─────────────────────────────────
+    // ── Case 4: Server responded with error ─────────────────────────────────
     if (error.response) {
       const status = error.response.status;
       // Try to get actual message from backend ApiResponse
@@ -69,7 +81,15 @@ api.interceptors.response.use(
         error.response.data;
 
       if (status === 401) {
-        // 401 handled by auth flow — don't double toast
+        localStorage.removeItem('ac_token');
+        localStorage.removeItem('ac_user');
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+          showToast('🔒 Login session expire ho chuka hai. Kripya dobara login karein.', 'error', 4000);
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1200);
+        }
         return Promise.reject(error);
       } else if (status === 403) {
         showToast('🔒 Aapko yeh karne ki permission nahi hai.', 'error');

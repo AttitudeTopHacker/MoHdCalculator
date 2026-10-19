@@ -15,7 +15,7 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration-ms}")
+    @Value("${jwt.expiration-ms:0}")
     private long jwtExpirationMs;
 
     /** Build signing key from Base64-encoded secret */
@@ -39,12 +39,17 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    /** Generate a JWT for the given email (subject) */
+    /** Generate a JWT for the given email (subject). If jwtExpirationMs <= 0, token never expires */
     public String generateToken(String email) {
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(email)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .issuedAt(new Date());
+
+        if (jwtExpirationMs > 0) {
+            builder.expiration(new Date(System.currentTimeMillis() + jwtExpirationMs));
+        }
+
+        return builder
                 .signWith(getSigningKey())
                 .compact();
     }

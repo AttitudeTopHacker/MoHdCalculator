@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { authApi } from '../api/authApi';
+import { isTokenExpired } from '../utils/token';
 
 const AuthContext = createContext(null);
 
@@ -7,8 +8,20 @@ const TOKEN_KEY = 'ac_token';
 const USER_KEY  = 'ac_user';
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
-  const [user,  setUser]  = useState(() => {
+  const [token, setToken] = useState(() => {
+    const saved = localStorage.getItem(TOKEN_KEY);
+    if (saved && isTokenExpired(saved)) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return null;
+    }
+    return saved;
+  });
+  const [user, setUser] = useState(() => {
+    const savedToken = localStorage.getItem(TOKEN_KEY);
+    if (!savedToken || isTokenExpired(savedToken)) {
+      return null;
+    }
     const saved = localStorage.getItem(USER_KEY);
     return saved ? JSON.parse(saved) : null;
   });

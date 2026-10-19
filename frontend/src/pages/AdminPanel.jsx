@@ -69,7 +69,9 @@ export default function AdminPanel() {
       const res = await adminApi.getUsers(query);
       setUsers(res.data.data);
     } catch (err) {
-      setToast({ type: 'error', message: 'Failed to fetch users.' });
+      if (err.response?.status !== 401 && err.code !== 'ERR_NETWORK' && err.message !== 'Network Error') {
+        setToast({ type: 'error', message: err.response?.data?.message || 'Failed to fetch users.' });
+      }
     } finally {
       setUserLoading(false);
     }
@@ -80,7 +82,9 @@ export default function AdminPanel() {
       const res = await adminApi.publicGetTeam();
       setTeam(res.data.data);
     } catch (err) {
-      setToast({ type: 'error', message: 'Failed to fetch team members.' });
+      if (err.code !== 'ERR_NETWORK' && err.message !== 'Network Error') {
+        setToast({ type: 'error', message: 'Failed to fetch team members.' });
+      }
     }
   };
 

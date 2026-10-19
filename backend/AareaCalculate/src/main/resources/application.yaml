@@ -47,7 +47,7 @@ spring:
 # ── JWT ──────────────────────────────────────────────────────────────────────
 jwt:
   secret: ${JWT_SECRET}
-  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  expiration-ms: ${JWT_EXPIRATION_MS:0} # 0 = Never expires (Permanent token)
 
 # ── App Config ────────────────────────────────────────────────────────────────
 app:
