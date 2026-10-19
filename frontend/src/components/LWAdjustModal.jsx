@@ -277,36 +277,34 @@ export default function LWAdjustModal({
 
   return (
     <div className="lw-modal-overlay" role="dialog" aria-modal="true">
-      <div className="lw-modal-container">
-        {/* Full Screen Header */}
+      <div className="lw-modal-container" onClick={(e) => e.stopPropagation()}>
+        {/* Sleek Compact Header */}
         <header className="lw-modal-header">
           <div className="lw-modal-title-group">
             <span className="lw-modal-icon-badge">📐</span>
-            <div>
-              <h2 className="lw-modal-title">Adjust Length × Width (Auto-Fit)</h2>
-              <p className="lw-modal-subtitle">Lock fixed sides and enter Target Area to auto-calculate remaining dimensions</p>
-            </div>
+            <h2 className="lw-modal-title">L × W Adjust (Auto-Fit)</h2>
           </div>
-          <button className="lw-modal-close-btn" onClick={onClose} aria-label="Close">
-            <span>✕ Close</span>
+          <button
+            type="button"
+            className="lw-modal-close-btn"
+            onClick={onClose}
+            aria-label="Close"
+            title="Close"
+          >
+            ✕
           </button>
         </header>
 
-        {/* Full Screen Body Content */}
-        <main className="lw-modal-body">
+        {/* Scrollable Body Content */}
+        <div className="lw-modal-body">
           {/* Reference Scale Banner */}
           <div className="lw-ref-banner">
-            <span className="lw-ref-label">💡 Reference Scale:</span>
-            <span className="lw-ref-value">
-              1 Acre = {bighaScale} Bigha · 1 Bigha = {biswaScale} Biswa · 1 Gatta = {gattaScale} in
-            </span>
+            <span>💡 1 Acre = <strong>{bighaScale} Bigha</strong> · 1 Bigha = <strong>{biswaScale} Biswa</strong> · 1 Gatta = <strong>{gattaScale} in</strong></span>
           </div>
 
-          {/* Unit Selector Card */}
-          <div className="lw-unit-selector-card">
-            <span className="lw-unit-card-title">
-              <span>📏</span> Choose Measurement Unit:
-            </span>
+          {/* Unit Selector Row */}
+          <div className="lw-unit-selector-row">
+            <span className="lw-unit-label">📏 Unit:</span>
             <div className="lw-unit-radio-group">
               <label className={`lw-unit-pill ${activeUnit === 'gatta' ? 'active' : ''}`}>
                 <input
@@ -565,7 +563,7 @@ export default function LWAdjustModal({
           {calcResult.summaryText && !calcResult.error && (
             <div className="lw-live-result-banner">
               <span className="lw-live-result-text">✨ {calcResult.summaryText}</span>
-              <span className="lw-live-result-val">Ready to Apply</span>
+              <span className="lw-live-result-val">Ready</span>
             </div>
           )}
 
@@ -575,13 +573,11 @@ export default function LWAdjustModal({
               ⚠️ {calcResult.error}
             </div>
           )}
-        </main>
 
-        {/* Fixed Bottom Action Bar */}
-        <footer className="lw-modal-footer">
-          <div className="lw-footer-inner">
+          {/* Natural Bottom Actions (Inside Scroll Flow) */}
+          <div className="lw-modal-actions">
             <button type="button" className="lw-btn-cancel" onClick={onClose}>
-              <span>✕ Close</span>
+              Cancel
             </button>
             <button
               type="button"
@@ -589,10 +585,10 @@ export default function LWAdjustModal({
               disabled={Boolean(calcResult.error)}
               onClick={handleApply}
             >
-              <span>✓ Apply & Get Result</span>
+              ✓ Apply & Get Result
             </button>
           </div>
-        </footer>
+        </div>
       </div>
     </div>
   );
